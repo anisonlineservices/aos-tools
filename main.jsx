@@ -371,4 +371,648 @@ if(n==='Crop PDF')return <div className="form">
 <input type="file" accept=".pdf,application/pdf" onChange={e=>SFile(e.target.files?.[0])}/>
 <div className="fields">
 <label>Left<input id="crop-left" type="number" min="0" defaultValue="20"/></label>
-<label>Bottom<input id="crop-bottom
+<label>Bottom<input id="crop-bottom" type="number" min="0" defaultValue="20"/></label>
+<label>Right margin<input id="crop-right" type="number" min="0" defaultValue="20"/></label>
+<label>Top margin<input id="crop-top" type="number" min="0" defaultValue="20"/></label>
+</div>
+<button disabled={!file} onClick={async()=>{
+try{
+const doc=await PDFDocument.load(await file.arrayBuffer());
+for(const pg of doc.getPages()){
+const {width,height}=pg.getSize();
+const l=Number(document.getElementById('crop-left').value)||0;
+const b=Number(document.getElementById('crop-bottom').value)||0;
+const r=Number(document.getElementById('crop-right').value)||0;
+const t=Number(document.getElementById('crop-top').value)||0;
+if(l+r>=width||b+t>=height)throw new Error('Margins are too large for a page.');
+pg.setCropBox(l,b,width-l-r,height-b-t);
+}
+dl(new Blob([await doc.save()],{type:'application/pdf'}),'aos-cropped.pdf');
+SM('Crop box applied. Some PDF viewers may still show the full page if they ignore crop boxes.');
+}catch(e){SM(e.message||'Could not crop this PDF.')}
+}}>Crop pages and download</button>
+</div>;
+
+if(['Split PDF','Rotate PDF','Page numbers'].includes(n))return <div className="form">
+<p>PDF processing happens in your browser. Select one PDF file.</p>
+<input type="file" accept=".pdf,application/pdf" onChange={e=>SFile(e.target.files?.[0])}/>
+{n==='Split PDF'&&<>
+<label>Pages to extract (e.g. 1,3-5)</label>
+<input value={pages} onChange={e=>SPages(e.target.value)} placeholder="1,3-5"/>
+</>}
+{n==='Rotate PDF'&&<label>Rotation <select value={rotation} onChange={e=>SRotation(+e.target.value)}>
+<option value={90}>90° clockwise</option>
+<option value={180}>180°</option>
+<option value={270}>270° clockwise</option>
+</select></label>}
+<button disabled={!file} onClick={async()=>{
+try{
+const doc=await PDFDocument.load(await file.arrayBuffer());
+if(n==='Split PDF'){
+const ids=new Set();
+for(const part of pages.split(',')){
+const m=part.trim().match(/^(\d+)(?:-(\d+))?$/);
+if(!m)throw new Error('Use page numbers like 1,3-5');
+const a=+m[1],b=+(m[2]||m[1]);
+if(a<1||b<a||b>doc.getPageCount())throw new Error('Page range is outside this PDF');
+for(let i=a;i<=b;i++)ids.add(i-1);
+}
+if(!ids.size)throw new Error('Enter at least one page');
+const out=await PDFDocument.create();
+for(const pg of await out.copyPages(doc,[...ids].sort((a,b)=>a-b)))out.addPage(pg);
+dl(new Blob([await out.save()],{type:'application/pdf'}),'aos-split.pdf');
+SM(`Extracted ${ids.size} page(s).`);
+}else if(n==='Rotate PDF'){
+doc.getPages().forEach(pg=>pg.setRotation({type:'degrees',angle:((pg.getRotation().angle+rotation)%360)}));
+dl(new Blob([await doc.save()],{type:'application/pdf'}),'aos-rotated.pdf');
+SM('Rotated all pages and downloaded.');
+}else{
+doc.getPages().forEach((pg,i)=>{
+const {width}=pg.getSize();
+pg.drawText(String(i+1),{x:width-42,y:18,size:10});
+});
+dl(new Blob([await doc.save()],{type:'application/pdf'}),'aos-numbered.pdf');
+SM('Page numbers added at the bottom right.');
+}
+}catch(e){SM(e.message||'PDF processing failed. Check the PDF is valid and not encrypted.')}
+}}>{n==='Split PDF'?'Extract pages':n==='Rotate PDF'?'Rotate and download':'Add page numbers and download'}</button>
+</div>;
+
+if(n==='JPG to PDF')return <div className="form">
+<p>Select a JPG/JPEG or PNG image. A single-page PDF is created locally.</p>
+<input type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" onChange={e=>SFile(e.target.files?.[0])}/>
+<button disabled={!file} onClick={async()=>{
+try{
+const bytes=await file.arrayBuffer(),pdf=await PDFDocument.create();
+const im=file.type==='image/png'?await pdf.embedPng(bytes):await pdf.embedJpg(bytes);
+const scale=Math.min(595/im.width,842/im.height);
+const page=pdf.addPage([595,842]);
+page.drawImage(im,{x:(595-im.width*scale)/2,y:(842-im.height*scale)/2,width:im.width*scale,height:im.height*scale});
+dl(new Blob([await pdf.save()],{type:'application/pdf'}),'aos-image.pdf');
+SM('Created a one-page PDF locally.');
+}catch{SM('Could not convert. Use a valid JPG or PNG image.')}
+}}>Convert to PDF</button>
+</div>;
+
+if(n==='Image Merge')return <div className="form">
+<p>Select two or more images. They will be stacked vertically into one image on this page.</p>
+<input type="file" accept="image/*" multiple onChange={e=>SFiles([...e.target.files])}/>
+<button disabled={files.length<2} onClick={async()=>{
+try{
+const loaded=await Promise.all(files.map(f=>new Promise((resolve,reject)=>{
+const u=URL.createObjectURL(f),im=new Image();
+im.onload=()=>{URL.revokeObjectURL(u);resolve(im)};
+im.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('An image could not be read.'))};
+im.src=u;
+})));
+const width=Math.max(...loaded.map(im=>im.naturalWidth));
+const height=loaded.reduce((a,im)=>a+Math.round(im.naturalHeight*width/im.naturalWidth),0);
+const c=document.createElement('canvas');
+c.width=width;c.height=height;
+const ctx=c.getContext('2d');
+ctx.fillStyle='#fff';ctx.fillRect(0,0,width,height);
+let y=0;
+for(const im of loaded){
+const h=Math.round(im.naturalHeight*width/im.naturalWidth);
+ctx.drawImage(im,0,y,width,h);
+y+=h;
+}
+c.toBlob(b=>{
+if(b){dl(b,'aos-merged-images.jpg');SM(`Merged ${loaded.length} images locally.`)}
+else SM('Image merge export failed.');
+},'image/jpeg',.92);
+}catch(e){SM(e.message||'Image merge failed.')}
+}}>Merge images and download</button>
+</div>;
+
+if(['Compress Image','Compress JPG','Compress JPEG','Compress PNG','Compress WEBP','Image to JPG','Image to PNG','Image to JPEG','Image to WEBP','Resize Image','Rotate Image','Crop Circle Image','Crop Image','Photo Signature Resize','Passport Photo Sheet'].includes(n))return <div className="form">
+<p>Image processing stays in your browser. Passport sheet uses a generic layout; check official dimensions before submitting.</p>
+<input type="file" accept="image/*" onChange={e=>SFile(e.target.files?.[0])}/>
+<div className="row">
+<button disabled={!file} onClick={()=>imageJob('compress')}>Compress</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob('resize')}>Resize max 1200px</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob(n.includes('PNG')?'png':n.includes('WEBP')?'webp':'jpg')}>Convert</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob('rotate')}>Rotate 90°</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob('circle')}>Circle PNG</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob('crop')}>Center crop square</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob('signature')}>Signature resize</button>
+<button disabled={!file} className="secondary" onClick={()=>imageJob('passport')}>Photo sheet</button>
+</div>
+</div>;
+
+if(['Text Case Converter','Word Counter','JSON Formatter / Validator','Base64 Encoder / Decoder','URL Encoder / Decoder','Lorem Ipsum Generator','Text to Slug Converter','Notepad'].includes(n))return <div className="form">
+<label>{n==='JSON Formatter / Validator'?'JSON input':n==='Notepad'?'Your notes':'Text input'}</label>
+<textarea rows="8" value={utilText} onChange={e=>SUtilText(e.target.value)} placeholder="Type or paste text here..."/>
+<div className="row">
+{(n==='Text Case Converter'?['UPPERCASE','lowercase','Title Case','Sentence case']:n==='Base64 Encoder / Decoder'?['Encode Base64','Decode Base64']:n==='URL Encoder / Decoder'?['Encode URL','Decode URL']:n==='JSON Formatter / Validator'?['Format JSON','Minify JSON','Validate JSON']:n==='Text to Slug Converter'?['Convert to slug']:n==='Lorem Ipsum Generator'?['Generate sample']:n==='Notepad'?['Download TXT']:['Count words']).map(a=><button key={a} onClick={()=>{
+try{
+let out='';
+if(n==='Text Case Converter')out=a==='UPPERCASE'?utilText.toUpperCase():a==='lowercase'?utilText.toLowerCase():a==='Title Case'?utilText.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()):utilText.replace(/(^\s*\w|[.!?]\s+\w)/g,c=>c.toUpperCase());
+else if(n==='JSON Formatter / Validator'){
+const j=JSON.parse(utilText);
+out=a==='Format JSON'?JSON.stringify(j,null,2):a==='Minify JSON'?JSON.stringify(j):'Valid JSON ✓';
+}else if(n==='Base64 Encoder / Decoder')out=a==='Encode Base64'?btoa(unescape(encodeURIComponent(utilText))):decodeURIComponent(escape(atob(utilText)));
+else if(n==='URL Encoder / Decoder')out=a==='Encode URL'?encodeURIComponent(utilText):decodeURIComponent(utilText);
+else if(n==='Text to Slug Converter')out=utilText.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+else if(n==='Lorem Ipsum Generator')out='Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(8).trim();
+else if(n==='Notepad'){
+dl(new Blob([utilText],{type:'text/plain;charset=utf-8'}),'aos-notes.txt');
+SM('TXT downloaded. Notes are not saved online.');
+return;
+}else out=`Words: ${utilText.trim()?utilText.trim().split(/\s+/).length:0} · Characters: ${utilText.length} · No spaces: ${utilText.replace(/\s/g,'').length}`;
+SUtilOut(out);
+SM('Done in your browser.');
+}catch(e){
+SUtilOut('');
+SM('Could not process input: '+(e.message||'check the text format'));
+}
+}}>{a}</button>)}
+</div>
+{utilOut&&<>
+<label>Result</label>
+<textarea rows="6" readOnly value={utilOut}/>
+<button className="secondary" onClick={()=>navigator.clipboard?.writeText(utilOut)}>Copy result</button>
+</>}
+</div>;
+
+if(n==='Unit Converter')return <div className="form">
+<label>Value</label>
+<input type="number" value={utilNum} onChange={e=>SUtilNum(e.target.value)}/>
+<label>Conversion</label>
+<select value={utilChoice} onChange={e=>SUtilChoice(e.target.value)}>
+{[['km-mi','Kilometres → miles'],['mi-km','Miles → kilometres'],['kg-lb','Kilograms → pounds'],['lb-kg','Pounds → kilograms'],['cm-in','Centimetres → inches'],['in-cm','Inches → centimetres'],['c-f','Celsius → Fahrenheit'],['f-c','Fahrenheit → Celsius'],['l-gal','Litres → US gallons'],['gal-l','US gallons → litres']].map(([v,l])=><option value={v} key={v}>{l}</option>)}
+</select>
+<button onClick={()=>{
+const factors={'km-mi':x=>x*.621371,'mi-km':x=>x/.621371,'kg-lb':x=>x*2.20462,'lb-kg':x=>x/2.20462,'cm-in':x=>x/2.54,'in-cm':x=>x*2.54,'c-f':x=>x*9/5+32,'f-c':x=>(x-32)*5/9,'l-gal':x=>x/3.78541,'gal-l':x=>x*3.78541};
+SUtilOut(String(Number(factors[utilChoice](Number(utilNum)).toFixed(6))));
+}}>Convert</button>
+{utilOut&&<h3>{utilOut}</h3>}
+</div>;
+
+if(n==='GST Calculator'||n==='Percentage Calculator'||n==='EMI Calculator')return <div className="form">
+<label>{n==='GST Calculator'?'Amount (₹)':n==='Percentage Calculator'?'Total value':'Loan principal (₹)'}</label>
+<input type="number" value={utilNum} onChange={e=>SUtilNum(e.target.value)}/>
+<label>{n==='GST Calculator'?'GST rate (%)':n==='Percentage Calculator'?'Percentage (%)':'Annual interest rate (%)'}</label>
+<input type="number" value={utilRate} onChange={e=>SUtilRate(e.target.value)}/>
+{n==='EMI Calculator'&&<>
+<label>Tenure (months)</label>
+<input type="number" value={utilMonths} onChange={e=>SUtilMonths(e.target.value)}/>
+</>}
+<button onClick={()=>{
+const p=Number(utilNum),r=Number(utilRate);
+if(p<0||r<0){SM('Enter non-negative numbers.');return}
+if(n==='GST Calculator'){
+const tax=p*r/100;
+SUtilOut(`GST: ₹${tax.toFixed(2)} · Total including GST: ₹${(p+tax).toFixed(2)}`);
+}else if(n==='Percentage Calculator'){
+SUtilOut(`${r}% of ${p} = ${(p*r/100).toFixed(2)}`);
+}else{
+const m=r/1200,months=Math.max(1,Number(utilMonths));
+const emi=m===0?p/months:p*m*Math.pow(1+m,months)/(Math.pow(1+m,months)-1);
+SUtilOut(`Estimated EMI: ₹${emi.toFixed(2)} · Total payment: ₹${(emi*months).toFixed(2)} · Interest: ₹${(emi*months-p).toFixed(2)}`);
+}
+}}>Calculate</button>
+{utilOut&&<h3>{utilOut}</h3>}
+<p>Estimate only; verify tax rules, lender fees and official figures separately.</p>
+</div>;
+
+if(n==='Date Difference Calculator')return <div className="form">
+<label>Start date</label>
+<input id="date-start" type="date"/>
+<label>End date</label>
+<input id="date-end" type="date"/>
+<button onClick={()=>{
+const a=new Date(document.getElementById('date-start').value+'T00:00:00'),b=new Date(document.getElementById('date-end').value+'T00:00:00');
+if(Number.isNaN(+a)||Number.isNaN(+b)){SM('Choose both dates.');return}
+SUtilOut(`${Math.round(Math.abs(b-a)/86400000)} days between dates.`);
+}}>Calculate difference</button>
+{utilOut&&<h3>{utilOut}</h3>}
+</div>;
+
+if(n==='UUID Generator')return <div className="form">
+<button onClick={()=>{SUtilOut(crypto.randomUUID());SM('UUID generated locally.')}}>Generate UUID</button>
+{utilOut&&<div className="row"><code>{utilOut}</code><button className="secondary" onClick={()=>navigator.clipboard?.writeText(utilOut)}>Copy</button></div>}
+</div>;
+
+if(n==='Color Picker')return <div className="form">
+<label>Pick a colour</label>
+<input type="color" value={accent} onChange={e=>{SA(e.target.value);SUtilOut(e.target.value)}}/>
+<label>HEX</label>
+<input readOnly value={utilOut||accent}/>
+<button onClick={()=>navigator.clipboard?.writeText(utilOut||accent)}>Copy HEX</button>
+</div>;
+
+if(n==='Password Generator')return <div className="form">
+<label>Length: {pwLen}</label>
+<input type="range" min="8" max="64" value={pwLen} onChange={e=>SP(+e.target.value)}/>
+<button onClick={()=>{
+const chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*_-+=';
+const a=new Uint32Array(pwLen);
+crypto.getRandomValues(a);
+SPw([...a].map(x=>chars[x%chars.length]).join(''));
+SM('Generated locally; this page does not save the password.');
+}}>Generate password</button>
+{pw&&<div className="row"><code>{pw}</code><button className="secondary" onClick={()=>navigator.clipboard?.writeText(pw)}>Copy</button></div>}
+</div>;
+
+if(n==='Age Calculator')return <div className="form">
+<label>Date of birth</label>
+<input type="date" value={dob} onChange={e=>SDob(e.target.value)}/>
+<button onClick={()=>{
+if(!dob)return;
+const b=new Date(dob+'T00:00:00'),now=new Date();
+if(b>now){SAge('Date is in the future');return}
+let y=now.getFullYear()-b.getFullYear(),m=now.getMonth()-b.getMonth(),d=now.getDate()-b.getDate();
+if(d<0){m--;d+=new Date(now.getFullYear(),now.getMonth(),0).getDate()}
+if(m<0){y--;m+=12}
+SAge(`${y} years, ${m} months, ${d} days`);
+}}>Calculate age</button>
+{age&&<h3>{age}</h3>}
+</div>;
+
+if(n==='QR Code Generator')return <div className="form">
+<label>QR type</label>
+<select value={qrType} onChange={e=>SQrType(e.target.value)}>
+{['URL or plain text','Contact (vCard)','Email','Phone','SMS','Wi-Fi'].map(x=><option key={x}>{x}</option>)}
+</select>
+<label>{qrType==='Contact (vCard)'?'Contact details (Name, phone, email)':qrType==='Email'?'Email address':qrType==='Phone'?'Phone number':qrType==='SMS'?'Phone number and message':qrType==='Wi-Fi'?'Wi-Fi name and password':'URL or text'}</label>
+<textarea value={qr} onChange={e=>SQr(e.target.value)}/>
+<button onClick={async()=>{
+try{
+let value=qr;
+if(qrType==='Email')value='mailto:'+qr;
+if(qrType==='Phone')value='tel:'+qr;
+if(qrType==='SMS')value='SMSTO:'+qr;
+if(qrType==='Contact (vCard)')value='BEGIN:VCARD\nVERSION:3.0\nFN:'+qr+'\nEND:VCARD';
+if(qrType==='Wi-Fi')value='WIFI:T:WPA;S:'+qr+';P:;H:false;;';
+SQi(await QRCode.toDataURL(value,{width:300}));
+SM('QR generated locally.');
+}catch{SM('QR generation failed')}
+}}>Generate QR</button>
+{qrImg&&<>
+<img className="qr" src={qrImg}/>
+<button className="secondary" onClick={()=>dl(dataBlob(qrImg),'aos-qr.png')}>Download PNG</button>
+</>}
+</div>;
+
+if(n==='Barcode Generator')return <div className="form">
+<p>Generate a simple Code 39 barcode locally. Use uppercase letters, numbers, spaces, and - . $ / + %.</p>
+<label>Barcode value</label>
+<input value={barcodeText} onChange={e=>SBarcodeText(e.target.value.toUpperCase())}/>
+<button onClick={()=>{
+const map={'0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw','5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn','A':'wnnnnwnnw','B':'nnwnnwnnw','C':'wnwnnwnnn','D':'nnnnwwnnw','E':'wnnnwwnnn','F':'nnwnwwnnn','G':'nnnnnwwnw','H':'wnnnnwwnn','I':'nnwnnwwnn','J':'nnnnwwwnn','K':'wnnnnnnww','L':'nnwnnnnww','M':'wnwnnnnwn','N':'nnnnwnnww','O':'wnnnwnnwn','P':'nnwnwnnwn','Q':'nnnnnnwww','R':'wnnnnnwwn','S':'nnwnnnwwn','T':'nnnnwnwwn','U':'wwnnnnnnw','V':'nwwnnnnnw','W':'wwwnnnnnn','X':'nwnnwnnnw','Y':'wwnnwnnnn','Z':'nwwnwnnnn','-':'nwnnnnwnw','.':'wwnnnnwnn',' ':'nwwnnnwnn','$':'nwnwnwnnn','/':'nwnwnnnwn','+':'nwnnnwnwn','%':'nnnwnwnwn','*':'nwnnnwnnn'};
+const val='*'+barcodeText+'*';
+if(!barcodeText||[...val].some(ch=>!map[ch])){SM('Enter a supported Code 39 value.');return}
+let xx=10,svg='';
+for(const ch of val){
+for(let i=0;i<9;i++){
+const w=map[ch][i]==='w'?4:1;
+if(i%2===0)svg+=`<rect x="${xx}" y="8" width="${w}" height="72"/>`;
+xx+=w;
+}
+xx+=1;
+}
+window.__aosBarcodeSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="${xx+10}" height="100" viewBox="0 0 ${xx+10} 100"><rect width="100%" height="100%" fill="white"/><g fill="black">${svg}</g><text x="50%" y="95" font-size="12" text-anchor="middle" fill="black">${barcodeText}</text></svg>`;
+SUtilOut(barcodeText);
+SM('Barcode ready. Download SVG to use or print it.');
+}}>Generate barcode</button>
+{utilOut&&<div className="preview" dangerouslySetInnerHTML={{__html:window.__aosBarcodeSvg||''}}/>}
+<button className="secondary" onClick={()=>{
+if(window.__aosBarcodeSvg)dl(new Blob([window.__aosBarcodeSvg],{type:'image/svg+xml'}),'aos-barcode.svg');
+}}>Download SVG</button>
+</div>;
+
+if(n==='ZIP Extractor')return <div className="form">
+<p>Extract a ZIP archive in your browser. Extracted files are downloaded individually; files are not uploaded.</p>
+<input type="file" accept=".zip,application/zip" onChange={e=>{SFile(e.target.files?.[0]);SZipNames([])}}/>
+<button disabled={!file} onClick={async()=>{
+try{
+const zip=await JSZip.loadAsync(file);
+const names=Object.keys(zip.files).filter(k=>!zip.files[k].dir);
+SZipNames(names);
+if(!names.length){SM('No files found in this ZIP.');return}
+for(const name of names){
+const blob=await zip.files[name].async('blob');
+dl(blob,name.split('/').pop()||'extracted-file');
+await new Promise(r=>setTimeout(r,150));
+}
+SM(`Extracted ${names.length} file(s).`);
+}catch{SM('Could not read this ZIP archive.')}
+}}>Extract and download files</button>
+{zipNames.length>0&&<ul>{zipNames.map(x=><li key={x}>{x}</li>)}</ul>}
+</div>;
+
+if(n==='PAN Master Hub')return <div className="form">
+<p>Resize/crop a photo or signature locally for document workflows. Requirements vary by application; check the official portal before uploading.</p>
+<label>Document type</label>
+<select value={panType} onChange={e=>SPanType(e.target.value)}>
+<option>Photo</option><option>Signature</option><option>Supporting document</option>
+</select>
+<input type="file" accept="image/*" onChange={e=>SFile(e.target.files?.[0])}/>
+<button disabled={!file} onClick={()=>{
+const u=URL.createObjectURL(file),im=new Image();
+im.onload=()=>{
+let w=panType==='Photo'?213:panType==='Signature'?300:1200;
+let h=panType==='Photo'?213:panType==='Signature'?80:1600;
+const c=document.createElement('canvas');
+c.width=w;c.height=h;
+const ctx=c.getContext('2d');
+ctx.fillStyle='white';ctx.fillRect(0,0,w,h);
+const scale=Math.min(w/im.naturalWidth,h/im.naturalHeight);
+const dw=im.naturalWidth*scale,dh=im.naturalHeight*scale;
+ctx.drawImage(im,(w-dw)/2,(h-dh)/2,dw,dh);
+c.toBlob(b=>{
+if(b){
+dl(b,`aos-pan-${panType.toLowerCase().replace(/ /g,'-')}.jpg`);
+SM(`Resized ${panType.toLowerCase()} image downloaded as JPEG. Verify the required dimensions and file size for your application.`);
+}else SM('Image export failed.');
+},'image/jpeg',.85);
+URL.revokeObjectURL(u);
+};
+im.onerror=()=>SM('Could not open this image.');
+im.src=u;
+}}>Resize and download JPEG</button>
+<p>Photo preset: 213×213 px. Signature preset: 300×80 px. These are convenience presets, not a guarantee of current UTIITSL/Protean acceptance.</p>
+</div>;
+
+if(n==='HTML Editor')return <div className="form">
+<label>HTML source</label>
+<textarea rows="8" value={html} onChange={e=>SH(e.target.value)}/>
+<div className="preview"><iframe title="HTML preview" sandbox srcDoc={html}/></div>
+<button onClick={()=>dl(new Blob([html],{type:'text/html'}),'aos-html.html')}>Download HTML</button>
+</div>;
+
+if(n==='Real Client Ledger Diary (Khata)'){
+const money=v=>Number(v||0).toLocaleString('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2});
+const total=Number(ledger.government||0)+Number(ledger.charge||0);
+const month=localDate().slice(0,7);
+const monthRows=entries.filter(e=>(e.date||'').startsWith(month));
+const dayRows=entries.filter(e=>e.date===ledger.date);
+const sum=(rows,key)=>rows.reduce((a,e)=>a+Number(key==='total'?(e.total??(Number(e.government||0)+Number(e.charge||0))):(e[key]||0)),0);
+const filtered=entries.filter(e=>[e.name,e.services,e.token,e.status,e.date].join(' ').toLowerCase().includes(ledgerSearch.toLowerCase()));
+
+return <div className="form">
+<p>Client records stay on this browser/device. Export regular backups; clearing browser data can erase saved entries.</p>
+
+<div className="fields">
+<label>DATE<input type="date" value={ledger.date} onChange={e=>SLed({...ledger,date:e.target.value})}/></label>
+<label>NAME<input value={ledger.name} onChange={e=>SLed({...ledger,name:e.target.value})} placeholder="Client name"/></label>
+<label>SERVICES<input value={ledger.services} onChange={e=>SLed({...ledger,services:e.target.value})} placeholder="PAN, print, form fill…"/></label>
+<label>TOKEN NUM<input value={ledger.token} onChange={e=>SLed({...ledger,token:e.target.value})} placeholder="Token / receipt no."/></label>
+<label>GOVERNMENT FEES (₹)<input type="number" min="0" step="0.01" value={ledger.government} onChange={e=>SLed({...ledger,government:e.target.value})}/></label>
+<label>WORK CHARGE (₹)<input type="number" min="0" step="0.01" value={ledger.charge} onChange={e=>SLed({...ledger,charge:e.target.value})}/></label>
+<label>TOTAL PRICE (automatic)<input readOnly value={money(total)}/></label>
+<label>STATUS<select value={ledger.status} onChange={e=>SLed({...ledger,status:e.target.value})}><option>Pending</option><option>In Progress</option><option>Completed</option><option>Paid</option></select></label>
+</div>
+
+<div className="row">
+<button onClick={()=>{
+if(!ledger.name.trim()){SM('Enter a customer name.');return}
+if(!Number.isFinite(Number(ledger.government||0))||!Number.isFinite(Number(ledger.charge||0))||Number(ledger.government||0)<0||Number(ledger.charge||0)<0){SM('Enter valid non-negative government fees and work charge.');return}
+SE([{...ledger,id:Date.now(),government:Number(ledger.government||0),charge:Number(ledger.charge||0),total,createdAt:new Date().toISOString()},...entries]);
+SLed({...ledger,date:localDate(),name:'',services:'',token:'',government:'0',charge:'0',status:'Pending'});
+SM('Client entry saved on this device. Export a backup regularly.');
+}}>Add client entry</button>
+
+<button className="secondary" disabled={!entries.length} onClick={()=>dl(new Blob([JSON.stringify(entries,null,2)],{type:'application/json'}),'aos-khata-backup.json')}>Export JSON backup</button>
+
+<label className="file-import">Import JSON backup
+<input type="file" accept=".json,application/json" onChange={async e=>{
+const f=e.target.files?.[0];
+if(!f)return;
+try{
+const parsed=JSON.parse(await f.text());
+if(!Array.isArray(parsed)||parsed.some(x=>!x||typeof x!=="object"||!x.name)){
+SM('Invalid Khata backup file.');
+return;
+}
+if(window.confirm(`Import ${parsed.length} client records? Existing records will be kept and duplicates may appear.`)){
+SE([...parsed,...entries]);
+SM(`Imported ${parsed.length} client records. Export a new backup after checking them.`);
+}
+}catch{
+SM('Could not read this JSON backup.');
+}finally{
+e.target.value='';
+}
+}}/>
+</label>
+
+<button className="secondary" disabled={!entries.length} onClick={()=>{
+const cols=['DATE','NAME','SERVICES','TOKEN NUM','GOVERNMENT FEES','WORK CHARGE','TOTAL PRICE','STATUS'];
+const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+const csv=[cols.map(esc).join(','),...entries.map(e=>[e.date,e.name,e.services,e.token,e.government,e.charge,e.total??(Number(e.government||0)+Number(e.charge||0)),e.status].map(esc).join(','))].join('\n');
+dl(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'aos-khata.csv');
+}}>Export CSV / Excel</button>
+</div>
+
+<div className="khata-summary">
+<div><small>ALL CLIENTS</small><b>{entries.length}</b></div>
+<div><small>SELECTED DATE · GOVT FEES</small><b>{money(sum(dayRows,'government'))}</b></div>
+<div><small>SELECTED DATE · WORK CHARGE</small><b>{money(sum(dayRows,'charge'))}</b></div>
+<div><small>SELECTED DATE · TOTAL</small><b>{money(sum(dayRows,'total'))}</b></div>
+<div><small>THIS MONTH · GOVT FEES</small><b>{money(sum(monthRows,'government'))}</b></div>
+<div><small>THIS MONTH · WORK CHARGE</small><b>{money(sum(monthRows,'charge'))}</b></div>
+<div><small>THIS MONTH · TOTAL</small><b>{money(sum(monthRows,'total'))}</b></div>
+<div><small>UNPAID BALANCE</small><b>{money(sum(entries.filter(e=>e.status!=='Paid'),'total'))}</b></div>
+</div>
+
+<label>Search clients<input value={ledgerSearch} onChange={e=>SLSearch(e.target.value)} placeholder="Search name, service, token, date…"/></label>
+
+{filtered.length===0?<p>No matching client entries yet.</p>:<div className="khata-list">
+{filtered.map((e,i)=><div className="khata-entry" key={e.id||`${e.date}-${e.token}-${i}`}>
+<div>
+<b>{e.name}</b>
+<small>{e.date} · {e.services||'No service'} · Token: {e.token||'—'}</small>
+<small>Govt fees {money(e.government)} + Work charge {money(e.charge)} = <strong>{money(e.total??(Number(e.government||0)+Number(e.charge||0)))}</strong></small>
+<span className="khata-status">{e.status}</span>
+</div>
+<button className="secondary" onClick={()=>{
+if(window.confirm(`Delete ledger entry for ${e.name}?`))SE(entries.filter(x=>x!==e));
+}}>Delete</button>
+</div>)}
+</div>}
+
+<p>Saved in this browser on this device. This is not cloud-synced or encrypted; use a device lock and export backups. Government fees are recorded amounts, not verified automatically.</p>
+</div>;
+}
+
+if(n==='Image to Color'||n==='Color Extractor')return <div className="form">
+<p>Choose an image to inspect dominant pixels. (Basic browser colour sampler)</p>
+<input type="file" accept="image/*" onChange={e=>SFile(e.target.files?.[0])}/>
+<button disabled={!file} onClick={()=>{
+const u=URL.createObjectURL(file),im=new Image();
+im.onload=()=>{
+const c=document.createElement('canvas');
+c.width=1;c.height=1;
+c.getContext('2d').drawImage(im,0,0,1,1);
+const d=c.getContext('2d').getImageData(0,0,1,1).data;
+const hex='#'+[...d].slice(0,3).map(x=>x.toString(16).padStart(2,'0')).join('');
+SM('Sample colour: '+hex);
+URL.revokeObjectURL(u);
+};
+im.src=u;
+}}>Sample colour</button>
+</div>;
+
+if(n==='Image to URL / HTML')return <div className="form">
+<p>Creates an HTML data URL preview. Large images may make a very large file.</p>
+<input type="file" accept="image/*" onChange={e=>SFile(e.target.files?.[0])}/>
+<button disabled={!file} onClick={()=>{
+const r=new FileReader();
+r.onload=()=>{
+dl(new Blob([`<!doctype html><img alt="Image" src="${r.result}">`],{type:'text/html'}),'aos-image-html.html');
+SM('HTML image wrapper downloaded. The data URL stays inside that file.');
+};
+r.readAsDataURL(file);
+}}>Make HTML file</button>
+</div>;
+
+return <div className="notice">
+<ShieldCheck/>
+<div>
+<b>Catalog module — not implemented in this starter yet</b>
+<p>This tool is included in the catalog. Full functionality needs its own library or server-side processing. This site does not pretend that this tool is already working.</p>
+<p>Free/open-source options may be possible, but AI/video hosting and conversion have resource limits.</p>
+</div>
+</div>;
+}
+
+return <div className="app">
+<header>
+<button className="hamb" onClick={()=>SMob(!mobile)}>{mobile?<X/>:<Menu/>}</button>
+
+<button className="brand" onClick={()=>{ST(null);SC('All Tools')}}>
+<span className="logo">A</span>
+<span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
+</button>
+
+<div className="search">
+<Search/>
+<input value={query} placeholder="Search tools..." onChange={e=>{SQ(e.target.value);SC('All Tools')}}/>
+</div>
+
+<div className="head-actions">
+<select value={lang} onChange={e=>SL(e.target.value)}>
+<option>English</option><option>Hindi</option><option>Hinglish</option><option>Tamil</option><option>Telugu</option><option>Marathi</option>
+</select>
+
+<button className="round" onClick={()=>SD(!dark)}>{dark?<Sun/>:<Moon/>}</button>
+
+<div id="google-button">
+{!clientId&&!user&&<button className="signin" onClick={()=>SM('Set VITE_GOOGLE_CLIENT_ID in .env.local and add your website origin to Google Cloud OAuth settings.')}>Sign in</button>}
+</div>
+
+{user&&<span className="profile">
+{user.picture&&<img src={user.picture}/>}
+{user.name}
+<button onClick={()=>SU(null)}>Sign out</button>
+</span>}
+</div>
+</header>
+
+<div className="layout">
+<aside className={mobile?'open':''}>
+<div className="label">WORKSPACE</div>
+
+{cats.map(c=><button className={'nav '+(cat===c?'sel':'')} key={c} onClick={()=>{SC(c);ST(null);SMob(false)}}>
+{c==='PDF Tools'?<FileText/>:c==='Image Tools'?<ImageIcon/>:c==='Video Tools'?<Video/>:c==='AI Tools'?<Sparkles/>:<Wrench/>}
+<span>{c}</span><ChevronRight/>
+</button>)}
+
+<hr/>
+
+<div className="label">PERSONALIZE</div>
+
+<label className="side-field">Font
+<select value={font} onChange={e=>SF(e.target.value)}>
+{['Inter','Roboto','Poppins','DM Sans','Manrope','Space Grotesk','Open Sans','Work Sans','Arial','Georgia'].map(f=><option key={f}>{f}</option>)}
+</select>
+</label>
+
+<label className="side-field">Accent colour
+<input type="color" value={accent} onChange={e=>SA(e.target.value)}/>
+</label>
+
+<div className="privacy">
+<LockKeyhole/>
+<span><b>Privacy-minded</b><small>Working file tools process locally where supported.</small></span>
+</div>
+
+<small className="disclaimer">AOS Tools keeps tool workflows on this website; no external tool redirects.</small>
+</aside>
+
+<main>
+{!active?<>
+<section className="hero">
+<div>
+<div className="eyebrow">✦ FREE-FIRST TOOLKIT</div>
+<h1>Free tools.<br/><span>One simple workspace.</span></h1>
+<p>PDF, image, video, AI and everyday utilities in one place.</p>
+<div className="stats">
+<span><b>{items.length}+</b> catalog modules</span>
+<span><b>Local</b> file processing</span>
+<span><b>Free-first</b> setup</span>
+</div>
+</div>
+<div className="hero-graphic">
+<div className="float f1"><FileText/>PDF</div>
+<div className="float f2"><ImageIcon/>IMAGE</div>
+<div className="float f3"><Sparkles/>AI</div>
+</div>
+</section>
+
+<div className="section-head">
+<div>
+<h2>{cat==='All Tools'?'Explore tools':cat}</h2>
+<p>{query?`Results for "${query}"`:'Select a tool to open it.'}</p>
+</div>
+<span>{shown.length} items</span>
+</div>
+
+<div className="grid">
+{shown.map(t=><button key={t.cat+t.name} className="card" onClick={()=>t.url?window.open(t.url,'_blank','noopener,noreferrer'):tool(t)}>
+<span className={'tile '+t.cat.toLowerCase().split(' ')[0]}>
+{t.cat==='PDF Tools'?<FileText/>:t.cat==='Image Tools'?<ImageIcon/>:t.cat==='Video Tools'?<Video/>:t.cat==='AI Tools'?<Sparkles/>:<Wrench/>}
+</span>
+<b>{t.name}</b>
+<p>{t.url?'Official portal · opens in a new tab':t.working?'Working in this starter':'Catalog included · implementation needed'}</p>
+<span className="card-foot">
+<em className={t.working?'ready':'planned'}>{t.url?'Portal link':t.working?'Ready':'Planned'}</em>
+<ChevronRight size={15}/>
+</span>
+</button>)}
+</div>
+
+<section className="callout">
+<ShieldCheck/>
+<div>
+<b>Free-first, no fake promises</b>
+<p>₹0-first policy: no paid API or automatic upgrade. If a free provider changes its terms, disable or replace it instead of paying.</p>
+</div>
+</section>
+</>:<section className="workspace">
+<button className="back" onClick={()=>ST(null)}>← All tools</button>
+<div className="tool-heading">
+<span className="tile"><Wrench/></span>
+<div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
+</div>
+{content()}
+{msg&&<div className="message">{msg}</div>}
+</section>}
+</main>
+</div>
+
+<footer>
+<span>© {new Date().getFullYear()} AOS Tools · Free-first</span>
+<button onClick={()=>{
+SD(false);
+SA('#052f52');
+SF('Inter');
+SL('English');
+}}> <RotateCcw size={14}/> Reset appearance</button>
+</footer>
+</div>;
+}
+
+createRoot(document.getElementById('root')).render(<App/>);
