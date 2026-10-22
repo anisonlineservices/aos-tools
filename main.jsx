@@ -179,27 +179,70 @@ localStorage.setItem('aos-khata-v1',JSON.stringify(entries));
 }catch{}
 },[entries]);
 
-useEffect(()=>{
-const timer=setInterval(()=>{
-if(window.google?.accounts?.id&&clientId&&!document.querySelector('#google-button button')){
-window.google.accounts.id.initialize({
-client_id:clientId,
-callback:r=>{
-try{
-const p=JSON.parse(atob(r.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-SU({name:p.name,email:p.email,picture:p.picture});
-SM('Signed in for display only. This is not secure backend authentication.');
-}catch{
-SM('Unable to read Google sign-in response');
-}
-}
-});
-const el=document.getElementById('google-button');
-if(el)window.google.accounts.id.renderButton(el,{theme:dark?'filled_black':'outline',size:'medium',shape:'pill'});
-}
-},700);
-return()=>clearInterval(timer);
-},[clientId,dark]);
+
+useEffect(() => {
+  let cancelled = false;
+  let initialized = false;
+
+  const renderGoogleButton = () => {
+    if (cancelled || initialized) return;
+
+    const google = window.google?.accounts?.id;
+    const el = document.getElementById('google-button');
+
+    if (!google || !clientId || !el) return;
+
+    initialized = true;
+
+    try {
+      google.initialize({
+        client_id: clientId,
+        callback: (r) => {
+          try {
+            const payload = r.credential.split('.')[1];
+            const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+            const p = JSON.parse(atob(base64));
+
+            SU({
+              name: p.name,
+              email: p.email,
+              picture: p.picture
+            });
+
+            SM('Signed in for display only. This is not secure backend authentication.');
+          } catch {
+            SM('Unable to read Google sign-in response');
+          }
+        }
+      });
+
+      el.replaceChildren();
+
+      google.renderButton(el, {
+        theme: dark ? 'filled_black' : 'outline',
+        size: 'medium',
+        shape: 'pill'
+      });
+    } catch (error) {
+      initialized = false;
+      console.error('Google Sign-In error:', error);
+    }
+  };
+
+  renderGoogleButton();
+
+  const retryTimer = window.setInterval(() => {
+    if (cancelled || initialized) return;
+
+    renderGoogleButton();
+  }, 300);
+
+  return () => {
+    cancelled = true;
+    window.clearInterval(retryTimer);
+  };
+}, [clientId, dark]);
+
 
 const dl=(blob,name)=>{
 const u=URL.createObjectURL(blob),a=document.createElement('a');
