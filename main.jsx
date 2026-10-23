@@ -320,10 +320,14 @@ function App() {
     [cat, query]
   );
 
-  // Apply Theme and Accent
+  // Forcefully apply Theme & Accent attribute to root HTML element
   useEffect(() => {
     const root = document.documentElement;
-    root.dataset.theme = dark ? 'dark' : 'light';
+    if (dark) {
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      root.setAttribute('data-theme', 'light');
+    }
     root.style.setProperty('--brand', accent);
   }, [dark, accent]);
 
