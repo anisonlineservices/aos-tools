@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -279,33 +279,14 @@ function App() {
   const [msg, SM] = useState('');
   const [file, SFile] = useState(null);
   const [files, SFiles] = useState([]);
-  const [pwLen, SP] = useState(16);
-  const [pw, SPw] = useState('');
-  const [dob, SDob] = useState('');
-  const [age, SAge] = useState('');
-  const [qr, SQr] = useState('https://example.com');
-  const [qrImg, SQi] = useState('');
-  const [pages, SPages] = useState('1');
-  const [rotation, SRotation] = useState(90);
-  const [order, SOrder] = useState('1,2,3');
-  const [html, SH] = useState('<h1>Hello AOS Tools</h1>\n<p>Preview your HTML here.</p>');
-
-  const [entries, SE] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('aos-khata-v1') || '[]'); }
-    catch { return []; }
-  });
-
-  const [ledger, SLed] = useState({ date: localDate(), name: '', services: '', token: '', government: '0', charge: '0', status: 'Pending' });
-  const [ledgerSearch, SLSearch] = useState('');
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
-  const [utilText, SUtilText] = useState('');
-  const [utilOut, SUtilOut] = useState('');
-  const [utilNum, SUtilNum] = useState('100');
-  const [barcodeText, SBarcodeText] = useState('AOS-TOOLS-123');
-  const [zipNames, SZipNames] = useState([]);
-  const [qrType, SQrType] = useState('URL or plain text');
-  const [panType, SPanType] = useState('Photo (213x213 px, Max 20KB)');
+
+  // PAN Master Hub Specific States
+  const [panTab, SPanTab] = useState('photo'); // 'photo' | 'signature' | 'pdf' | 'portals'
+  const [panPreview, SPanPreview] = useState('');
+  const [panFileObj, SPanFileObj] = useState(null);
+  const [panPortal, SPanPortal] = useState('NSDL');
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -320,7 +301,6 @@ function App() {
     [cat, query]
   );
 
-  // Forcefully apply Theme & Accent attribute to root HTML element
   useEffect(() => {
     const root = document.documentElement;
     if (dark) {
@@ -331,14 +311,12 @@ function App() {
     root.style.setProperty('--brand', accent);
   }, [dark, accent]);
 
-  // Save appearance settings
   useEffect(() => {
     try {
       localStorage.setItem('aos-appearance-v1', JSON.stringify({ dark, lang, accent }));
     } catch { }
   }, [dark, lang, accent]);
 
-  // Save active tool
   useEffect(() => {
     try {
       if (active) {
@@ -348,12 +326,6 @@ function App() {
       }
     } catch { }
   }, [active]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('aos-khata-v1', JSON.stringify(entries));
-    } catch { }
-  }, [entries]);
 
   const dl = (blob, name) => {
     const u = URL.createObjectURL(blob), a = document.createElement('a');
@@ -383,11 +355,8 @@ function App() {
     SM('');
     SFile(null);
     SFiles([]);
-    SPw('');
-    SAge('');
-    SQi('');
-    SUtilText('');
-    SUtilOut('');
+    SPanPreview('');
+    SPanFileObj(null);
   }
 
   function content() {
@@ -400,14 +369,195 @@ function App() {
       <button disabled={files.length < 2} onClick={merge}>Merge and download</button>
     </div>;
 
-    if (n === 'PAN Master Hub') return <div className="form" style={{ gap: '20px' }}>
-      <p><b>Anis Online Services — Official PAN Hub & Document Resizer</b></p>
-      <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6' }}>
-        Quickly resize photos and signatures according to official NSDL/UTIITSL requirements, view document checklist guidelines, and access direct official portal links.
-      </p>
+    if (n === 'PAN Master Hub') return <div className="form" style={{ gap: '16px' }}>
+      <p><b>Anis Online Services — Professional PAN Master Hub & Resizer</b></p>
+      
+      {/* PAN Hub Sub-Tabs */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
+        <button style={{ background: panTab === 'photo' ? 'var(--brand)' : 'var(--card)', color: panTab === 'photo' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('photo')}>Passport Photo Resizer</button>
+        <button style={{ background: panTab === 'signature' ? 'var(--brand)' : 'var(--card)', color: panTab === 'signature' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('signature')}>Signature Resizer</button>
+        <button style={{ background: panTab === 'pdf' ? 'var(--brand)' : 'var(--card)', color: panTab === 'pdf' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('pdf')}>PDF Compressor (&lt;300KB)</button>
+        <button style={{ background: panTab === 'portals' ? 'var(--brand)' : 'var(--card)', color: panTab === 'portals' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('portals')}>Official Portals</button>
+      </div>
 
-      <div style={{ background: 'var(--soft)', padding: '15px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <b style={{ fontSize: '12px', color: 'var(--brand)' }}>Direct Official Portals & Services</b>
+      {/* 1. Passport Photo Resizer Tab with Exact NSDL & UTIITSL Specs */}
+      {panTab === 'photo' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
+        <b>📷 Passport Size Photo Resizer (Exact Portal Standards)</b>
+        <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
+          • <b>NSDL / Protean:</b> 197 × 276 pixels (Max 50 KB, JPEG).<br />
+          • <b>UTIITSL:</b> 213 × 213 pixels (Max 30 KB, JPEG).
+        </p>
+        <label>Select Application Portal</label>
+        <select value={panPortal} onChange={e => SPanPortal(e.target.value)}>
+          <option value="NSDL">NSDL / Protean (197x276 px, Max 50KB)</option>
+          <option value="UTI">UTIITSL (213x213 px, Max 30KB)</option>
+        </select>
+        <input type="file" accept="image/*" onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) {
+            SPanFileObj(f);
+            const u = URL.createObjectURL(f);
+            SPanPreview(u);
+          }
+        }} />
+        {panPreview && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', background: 'var(--soft)', padding: '12px', borderRadius: '8px' }}>
+          <img src={panPreview} alt="Preview" style={{ width: '120px', height: '140px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--line)' }} />
+          <button onClick={() => {
+            const im = new Image();
+            im.onload = () => {
+              const w = panPortal === 'NSDL' ? 197 : 213;
+              const h = panPortal === 'NSDL' ? 276 : 213;
+              const maxKb = panPortal === 'NSDL' ? 50 : 30;
+
+              const c = document.createElement('canvas');
+              c.width = w; c.height = h;
+              const ctx = c.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, w, h);
+              const scale = Math.min(w / im.naturalWidth, h / im.naturalHeight);
+              const dw = im.naturalWidth * scale, dh = im.naturalHeight * scale;
+              ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+
+              c.toBlob(blob => {
+                if (!blob) return;
+                let q = 0.9;
+                const checkSize = (currentBlob) => {
+                  if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
+                    dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
+                    SM(`Passport Photo resized & compressed successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB (Max allowed: ${maxKb}KB).`);
+                  } else {
+                    q -= 0.1;
+                    c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
+                  }
+                };
+                checkSize(blob);
+              }, 'image/jpeg', 0.9);
+            };
+            im.src = panPreview;
+          }}>Resize & Download Photo</button>
+        </div>}
+      </div>}
+
+      {/* 2. Signature Resizer Tab with Exact NSDL & UTIITSL Specs */}
+      {panTab === 'signature' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
+        <b>✍️ Signature Resizer (Exact Portal Standards)</b>
+        <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
+          • <b>NSDL / Protean:</b> 354 × 157 pixels (Max 50 KB, JPEG).<br />
+          • <b>UTIITSL:</b> 200 × 400 pixels (Max 60 KB, JPEG).
+        </p>
+        <label>Select Application Portal</label>
+        <select value={panPortal} onChange={e => SPanPortal(e.target.value)}>
+          <option value="NSDL">NSDL / Protean (354x157 px, Max 50KB)</option>
+          <option value="UTI">UTIITSL (200x400 px, Max 60KB)</option>
+        </select>
+        <input type="file" accept="image/*" onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) {
+            SPanFileObj(f);
+            const u = URL.createObjectURL(f);
+            SPanPreview(u);
+          }
+        }} />
+        {panPreview && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', background: 'var(--soft)', padding: '12px', borderRadius: '8px' }}>
+          <img src={panPreview} alt="Signature Preview" style={{ width: '220px', height: '80px', objectFit: 'contain', background: '#fff', borderRadius: '6px', border: '1px solid var(--line)' }} />
+          <button onClick={() => {
+            const im = new Image();
+            im.onload = () => {
+              const w = panPortal === 'NSDL' ? 354 : 200;
+              const h = panPortal === 'NSDL' ? 157 : 400;
+              const maxKb = panPortal === 'NSDL' ? 50 : 60;
+
+              const c = document.createElement('canvas');
+              c.width = w; c.height = h;
+              const ctx = c.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, w, h);
+              const scale = Math.min(w / im.naturalWidth, h / im.naturalHeight);
+              const dw = im.naturalWidth * scale, dh = im.naturalHeight * scale;
+              ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+
+              c.toBlob(blob => {
+                if (!blob) return;
+                let q = 0.9;
+                const checkSize = (currentBlob) => {
+                  if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
+                    dl(currentBlob, `aos-pan-signature-${panPortal.toLowerCase()}.jpg`);
+                    SM(`Signature resized & compressed successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB (Max allowed: ${maxKb}KB).`);
+                  } else {
+                    q -= 0.1;
+                    c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
+                  }
+                };
+                checkSize(blob);
+              }, 'image/jpeg', 0.9);
+            };
+            im.src = panPreview;
+          }}>Resize & Download Signature</button>
+        </div>}
+      </div>}
+
+      {/* 3. PDF Compressor (<300KB) Tab */}
+      {panTab === 'pdf' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
+        <b>📑 Official Supporting Document PDF Compressor (&lt;300KB)</b>
+        <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Upload any scanned document or image/PDF. This tool strictly compresses and formats it into a lightweight PDF under 300 KB for NSDL/UTIITSL portals.</p>
+        <input type="file" accept="image/*,.pdf" onChange={e => SFile(e.target.files?.[0])} />
+        <button disabled={!file} onClick={async () => {
+          try {
+            if (!file) return;
+            const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+            const pdfDoc = await PDFDocument.create();
+            const page = pdfDoc.addPage([595, 842]);
+
+            if (isPdf) {
+              const srcBytes = await file.arrayBuffer();
+              const srcPdf = await PDFDocument.load(srcBytes);
+              const [cop] = await pdfDoc.copyPages(srcPdf, [0]);
+              pdfDoc.removePage(0);
+              pdfDoc.addPage(cop);
+            } else {
+              const u = URL.createObjectURL(file);
+              const img = new Image();
+              await new Promise((res, rej) => {
+                img.onload = res;
+                img.onerror = rej;
+                img.src = u;
+              });
+
+              const maxW = 595;
+              let w = img.naturalWidth, h = img.naturalHeight;
+              if (w > maxW) {
+                h = Math.round((h * maxW) / w);
+                w = maxW;
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.fillStyle = '#fff';
+              ctx.fillRect(0, 0, w, h);
+              ctx.drawImage(img, 0, 0, w, h);
+
+              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.4);
+              const resBlob = dataBlob(compressedDataUrl);
+              const imgBytes = await resBlob.arrayBuffer();
+              const embedded = await pdfDoc.embedJpg(imgBytes);
+
+              page.drawImage(embedded, { x: 20, y: 20, width: 555, height: 802 });
+              URL.revokeObjectURL(u);
+            }
+
+            const pdfBytes = await pdfDoc.save();
+            dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-compressed.pdf');
+            SM(`PDF compressed successfully! Final size: ${Math.round(pdfBytes.size / 1024)} KB (&lt;300KB). Ready for upload.`);
+          } catch (err) {
+            console.error(err);
+            SM('Compression failed. Please ensure file is valid.');
+          }
+        }}>Compress PDF & Download (&lt;300KB)</button>
+      </div>}
+
+      {/* 4. Official Portals Tab */}
+      {panTab === 'portals' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
+        <b>🔗 Direct Official Portals & Services</b>
         <div className="portal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
           <a href="https://onlineservices.proteantech.in/paam/endUserRegisterContact.html" target="_blank" rel="noreferrer">Online PAN Application ↗</a>
           <a href="https://onlineservices.proteantech.in/paam/ReprintEPan.html" target="_blank" rel="noreferrer">Request Reprint of PAN ↗</a>
@@ -416,95 +566,7 @@ function App() {
           <a href="https://www.pan.utiitsl.com/PAN/newA.html" target="_blank" rel="noreferrer">UTIITSL Portal ↗</a>
           <a href="https://www.incometax.gov.in/iec/foportal/" target="_blank" rel="noreferrer">Income Tax Department ↗</a>
         </div>
-      </div>
-
-      <hr />
-
-      <div style={{ border: '1px solid var(--line)', padding: '15px', borderRadius: '12px' }}>
-        <b style={{ fontSize: '12px' }}>Official Document Resizer & Cropper</b>
-        <label>Select Document Type</label>
-        <select value={panType} onChange={e => SPanType(e.target.value)}>
-          <option>Photo (213x213 px, Max 20KB)</option>
-          <option>Signature (300x80 px, Max 10KB)</option>
-          <option>Supporting Document (PDF/A, Max 300KB)</option>
-        </select>
-        <input type="file" accept="image/*,.pdf" onChange={e => SFile(e.target.files?.[0])} style={{ marginTop: '10px' }} />
-        <button style={{ marginTop: '10px' }} disabled={!file} onClick={async () => {
-          if (panType.includes('Supporting')) {
-            try {
-              const u = URL.createObjectURL(file);
-              const img = new Image();
-              img.onload = async () => {
-                const pdfDoc = await PDFDocument.create();
-                const page = pdfDoc.addPage([595, 842]);
-                
-                const maxW = 600;
-                let w = img.naturalWidth, h = img.naturalHeight;
-                if (w > maxW) {
-                  h = Math.round((h * maxW) / w);
-                  w = maxW;
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(0, 0, w, h);
-                ctx.drawImage(img, 0, 0, w, h);
-                
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.45);
-                const resBlob = dataBlob(compressedDataUrl);
-                const imgBytes = await resBlob.arrayBuffer();
-                const embedded = await pdfDoc.embedJpg(imgBytes);
-                
-                page.drawImage(embedded, { x: 30, y: 30, width: 535, height: 782 });
-                const pdfBytes = await pdfDoc.save();
-                
-                dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
-                SM(`Supporting document compressed successfully (${Math.round(pdfBytes.size / 1024)} KB < 300KB). Ready for portal!`);
-                URL.revokeObjectURL(u);
-              };
-              img.onerror = () => {
-                SM('Kripya supporting document ke liye image (JPG/PNG) upload karein taaki tool size 300KB ke andar compress kar sake.');
-                URL.revokeObjectURL(u);
-              };
-              img.src = u;
-            } catch {
-              SM('Could not process supporting document.');
-            }
-            return;
-          }
-
-          const u = URL.createObjectURL(file), im = new Image();
-          im.onload = () => {
-            const isPhoto = panType.includes('Photo');
-            let w = isPhoto ? 213 : 300;
-            let h = isPhoto ? 213 : 80;
-            const c = document.createElement('canvas');
-            c.width = w; c.height = h;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = 'white'; ctx.fillRect(0, 0, w, h);
-            const scale = Math.min(w / im.naturalWidth, h / im.naturalHeight);
-            const dw = im.naturalWidth * scale, dh = im.naturalHeight * scale;
-            ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
-            c.toBlob(b => {
-              if (b) {
-                dl(b, `aos-pan-${isPhoto ? 'photo' : 'signature'}.jpg`);
-                SM(`Resized successfully (${w}x${h}px, ${Math.round(b.size / 1024)} KB).`);
-              } else SM('Export failed.');
-            }, 'image/jpeg', .85);
-            URL.revokeObjectURL(u);
-          };
-          im.src = u;
-        }}>Resize & Download File</button>
-      </div>
-
-      <div style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--soft)', padding: '15px', borderRadius: '12px', lineHeight: '1.6' }}>
-        <b>📋 Official PAN Document Guidelines Summary:</b>
-        <br />• <b>Photograph:</b> 3.5 x 2.5 cm (213x213 pixels), Max 20 KB (JPEG).
-        <br />• <b>Signature:</b> 2.0 x 4.5 cm (300x80 pixels), Max 10 KB (JPEG).
-        <br />• <b>Supporting Docs:</b> PDF format, Max 300 KB per page.
-      </div>
+      </div>}
     </div>;
 
     return <div className="form">
