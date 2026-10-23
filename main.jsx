@@ -313,7 +313,7 @@ function App() {
   // Split PDF States & Preview State
   const [splitMode, SSplitMode] = useState('all');
   const [splitRange, SSplitRange] = useState('');
-  const [previewUrl, SPreviewUrl] = useState('');
+  const [previewDataUrl, SPreviewDataUrl] = useState('');
   const [previewType, SPreviewType] = useState('');
 
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
@@ -412,7 +412,16 @@ function App() {
     }
   }
 
-  // Split PDF with Preview Support
+  // Helper to convert blob to Data URL string for reliable mobile viewing
+  const blobToDataUrl = (blob) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Split PDF with Data URL Preview Support
   async function splitPdfAction(shouldPreview = false) {
     try {
       if (!file) { SM('Please select a PDF file first.'); return; }
@@ -431,7 +440,8 @@ function App() {
         }
         const content = await zip.generateAsync({ type: 'blob' });
         if (shouldPreview) {
-          SPreviewUrl(URL.createObjectURL(content));
+          const dataUrl = await blobToDataUrl(content);
+          SPreviewDataUrl(dataUrl);
           SPreviewType('zip');
           SM(`Generated ZIP containing ${totalPages} pages ready for preview & download.`);
         } else {
@@ -469,7 +479,8 @@ function App() {
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
 
         if (shouldPreview) {
-          SPreviewUrl(URL.createObjectURL(blob));
+          const dataUrl = await blobToDataUrl(blob);
+          SPreviewDataUrl(dataUrl);
           SPreviewType('pdf');
           SM(`Extracted ${pagesToExtract.length} pages successfully. Ready for preview!`);
         } else {
@@ -492,7 +503,7 @@ function App() {
     SM('');
     SFile(null);
     SFiles([]);
-    SPreviewUrl('');
+    SPreviewDataUrl('');
     window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
@@ -510,7 +521,7 @@ function App() {
       <p><b>Split PDF File Locally</b></p>
       <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract individual pages or specific page ranges from your PDF securely in your browser.</p>
       
-      <input type="file" accept=".pdf,application/pdf" onChange={e => { SFile(e.target.files?.[0]); SPreviewUrl(''); }} />
+      <input type="file" accept=".pdf,application/pdf" onChange={e => { SFile(e.target.files?.[0]); SPreviewDataUrl(''); }} />
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
@@ -530,18 +541,18 @@ function App() {
         <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Preview Result</button>
       </div>
 
-      {previewUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
+      {previewDataUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
         <b>👀 Output Ready</b>
         {previewType === 'pdf' ? (
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <a href={previewUrl} target="_blank" rel="noreferrer" style={{ background: 'var(--brand)', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <a href={previewDataUrl} target="_blank" rel="noreferrer" style={{ background: 'var(--brand)', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <ExternalLink size={14} /> Open PDF in New Tab
             </a>
           </div>
         ) : (
           <p style={{ fontSize: '12px', color: 'var(--muted)' }}>ZIP archive generated with all split pages successfully.</p>
         )}
-        <button onClick={() => dl(dataBlobFromUrl(previewUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}>Download File</button>
+        <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}>Download File</button>
       </div>}
     </div>;
 
@@ -756,8 +767,16 @@ function App() {
     </div>;
   }
 
-  function dataBlobFromUrl(url) {
-    return fetch(url).then(res => res.blob());
+  function dataBlobFromUrl(dataUrl) {
+    const arr = dataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   }
 
   return <div className="app">
@@ -896,7 +915,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }}>← All tools</button>
+          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }}>← All tools</code-block></button>
           <div className="tool-heading">
             <span className={'tile ' + getTileClass(active.cat)}>{getTileIcon(active.cat)}</span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
