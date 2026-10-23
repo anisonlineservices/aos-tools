@@ -17,14 +17,13 @@
   --soft: #172237;
 }
 
-/* Ensure high contrast for dark theme with dark/default accents */
+/* Ensure high contrast for dark theme with dark/default accents, but keep tile icons soft */
 [data-theme="dark"] .brand span b,
 [data-theme="dark"] .brand span small,
 [data-theme="dark"] .nav.sel,
 [data-theme="dark"] .nav.sel span,
 [data-theme="dark"] .nav.sel svg,
-[data-theme="dark"] .card-foot .ready,
-[data-theme="dark"] .tile svg {
+[data-theme="dark"] .card-foot .ready {
   color: #ffffff !important;
   fill: #ffffff !important;
 }
