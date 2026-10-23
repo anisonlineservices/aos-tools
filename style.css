@@ -76,7 +76,7 @@ header {
   width: 36px;
   height: 36px;
   background: var(--brand);
-  color: #fff;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -586,8 +586,8 @@ footer {
 }
 
 footer button {
-  background: None;
-  border: None;
+  background: none;
+  border: none;
   color: var(--muted);
   cursor: pointer;
   display: flex;
