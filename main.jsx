@@ -212,9 +212,9 @@ const portals = [
   ['National Testing Agency', 'https://nta.ac.in/']
 ].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
 
-// Helper to define which tools are fully working vs coming soon
+// Helper to define active working tools vs coming soon
 function getToolStatus(cat, name) {
-  if (cat === 'PDF Tools' && name === 'Merge PDF') return 'ready';
+  if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF')) return 'ready';
   if (cat === 'Special Tools' && name === 'PAN Master Hub') return 'ready';
   if (cat === 'Government Portals') return 'portal';
   return 'soon';
@@ -318,6 +318,10 @@ function App() {
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
+  // Split PDF States
+  const [splitMode, SSplitMode] = useState('all'); // 'all' or 'range'
+  const [splitRange, SSplitRange] = useState('');
+
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
   const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
@@ -414,6 +418,63 @@ function App() {
     }
   }
 
+  // Split PDF Functionality
+  async function splitPdfAction() {
+    try {
+      if (!file) { SM('Please select a PDF file first.'); return; }
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const totalPages = pdfDoc.getPageCount();
+
+      if (splitMode === 'all') {
+        const zip = new JSZip();
+        for (let i = 0; i < totalPages; i++) {
+          const subPdf = await PDFDocument.create();
+          const [copiedPage] = await subPdf.copyPages(pdfDoc, [i]);
+          subPdf.addPage(copiedPage);
+          const pdfBytes = await subPdf.save();
+          zip.file(`page_${i + 1}.pdf`, pdfBytes);
+        }
+        const content = await zip.generateAsync({ type: 'blob' });
+        dl(content, 'aos-split-pages.zip');
+        SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
+      } else if (splitMode === 'range') {
+        if (!splitRange.trim()) { SM('Please enter a valid page range (e.g. 1-3 or 2,4,5).'); return; }
+        const subPdf = await PDFDocument.create();
+        const pagesToExtract = [];
+        
+        const parts = splitRange.split(',');
+        for (const part of parts) {
+          if (part.includes('-')) {
+            const [start, end] = part.split('-').map(n => parseInt(n.trim(), 10));
+            if (!isNaN(start) && !isNaN(end)) {
+              for (let p = start; p <= end; p++) {
+                if (p >= 1 && p <= totalPages) pagesToExtract.push(p - 1);
+              }
+            }
+          } else {
+            const p = parseInt(part.trim(), 10);
+            if (!isNaN(p) && p >= 1 && p <= totalPages) pagesToExtract.push(p - 1);
+          }
+        }
+
+        if (pagesToExtract.length === 0) {
+          SM('Invalid page range specified based on total pages.');
+          return;
+        }
+
+        const copiedPages = await subPdf.copyPages(pdfDoc, pagesToExtract);
+        copiedPages.forEach(pg => subPdf.addPage(pg));
+        const pdfBytes = await subPdf.save();
+        dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-split-range.pdf');
+        SM(`Successfully extracted ${pagesToExtract.length} pages into a new PDF.`);
+      }
+    } catch (err) {
+      console.error(err);
+      SM('Split failed. Ensure the PDF file is valid and not password protected.');
+    }
+  }
+
   function tool(tObj) {
     if (tObj.status === 'soon') {
       SM(`Tool "${tObj.name}" is coming soon! We are building it.`);
@@ -434,6 +495,28 @@ function App() {
       <p>Select two or more PDFs; they are merged in this browser.</p>
       <input type="file" accept=".pdf,application/pdf" multiple onChange={e => SFiles([...e.target.files])} />
       <button disabled={files.length < 2} onClick={merge}>Merge and download</button>
+    </div>;
+
+    if (n === 'Split PDF') return <div className="form" style={{ gap: '14px' }}>
+      <p><b>Split PDF File Locally</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract individual pages or specific page ranges from your PDF securely in your browser.</p>
+      
+      <input type="file" accept=".pdf,application/pdf" onChange={e => SFile(e.target.files?.[0])} />
+
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+          <input type="radio" name="splitMode" checked={splitMode === 'all'} onChange={() => SSplitMode('all')} /> Extract every page into separate PDFs (ZIP)
+        </label>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+          <input type="radio" name="splitMode" checked={splitMode === 'range'} onChange={() => SSplitMode('range')} /> Extract custom page range
+        </label>
+        {splitMode === 'range' && <input type="text" placeholder="e.g. 1-3, 5, 7-10" value={splitRange} onChange={e => SSplitRange(e.target.value)} style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: '8px', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }} />}
+      </div>
+
+      <button disabled={!file} onClick={splitPdfAction}>Split PDF & Download</button>
     </div>;
 
     if (n === 'PAN Master Hub') return <div className="form" style={{ gap: '16px' }}>
