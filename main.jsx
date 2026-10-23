@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -212,7 +212,6 @@ const portals = [
   ['National Testing Agency', 'https://nta.ac.in/']
 ].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
 
-// Helper to define active working tools vs coming soon
 function getToolStatus(cat, name) {
   if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF')) return 'ready';
   if (cat === 'Special Tools' && name === 'PAN Master Hub') return 'ready';
@@ -318,9 +317,11 @@ function App() {
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
-  // Split PDF States
-  const [splitMode, SSplitMode] = useState('all'); // 'all' or 'range'
+  // Split PDF States & Preview State
+  const [splitMode, SSplitMode] = useState('all');
   const [splitRange, SSplitRange] = useState('');
+  const [previewUrl, SPreviewUrl] = useState('');
+  const [previewType, SPreviewType] = useState('');
 
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
@@ -418,8 +419,8 @@ function App() {
     }
   }
 
-  // Split PDF Functionality
-  async function splitPdfAction() {
+  // Split PDF with Preview Support
+  async function splitPdfAction(shouldPreview = false) {
     try {
       if (!file) { SM('Please select a PDF file first.'); return; }
       const arrayBuffer = await file.arrayBuffer();
@@ -436,8 +437,14 @@ function App() {
           zip.file(`page_${i + 1}.pdf`, pdfBytes);
         }
         const content = await zip.generateAsync({ type: 'blob' });
-        dl(content, 'aos-split-pages.zip');
-        SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
+        if (shouldPreview) {
+          SPreviewUrl(URL.createObjectURL(content));
+          SPreviewType('zip');
+          SM(`Generated ZIP containing ${totalPages} pages ready for preview & download.`);
+        } else {
+          dl(content, 'aos-split-pages.zip');
+          SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
+        }
       } else if (splitMode === 'range') {
         if (!splitRange.trim()) { SM('Please enter a valid page range (e.g. 1-3 or 2,4,5).'); return; }
         const subPdf = await PDFDocument.create();
@@ -466,8 +473,16 @@ function App() {
         const copiedPages = await subPdf.copyPages(pdfDoc, pagesToExtract);
         copiedPages.forEach(pg => subPdf.addPage(pg));
         const pdfBytes = await subPdf.save();
-        dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-split-range.pdf');
-        SM(`Successfully extracted ${pagesToExtract.length} pages into a new PDF.`);
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+        if (shouldPreview) {
+          SPreviewUrl(URL.createObjectURL(blob));
+          SPreviewType('pdf');
+          SM(`Extracted ${pagesToExtract.length} pages successfully. Ready for preview!`);
+        } else {
+          dl(blob, 'aos-split-range.pdf');
+          SM(`Successfully extracted ${pagesToExtract.length} pages into a new PDF.`);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -484,6 +499,7 @@ function App() {
     SM('');
     SFile(null);
     SFiles([]);
+    SPreviewUrl('');
     window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
@@ -501,7 +517,7 @@ function App() {
       <p><b>Split PDF File Locally</b></p>
       <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract individual pages or specific page ranges from your PDF securely in your browser.</p>
       
-      <input type="file" accept=".pdf,application/pdf" onChange={e => SFile(e.target.files?.[0])} />
+      <input type="file" accept=".pdf,application/pdf" onChange={e => { SFile(e.target.files?.[0]); SPreviewUrl(''); }} />
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
@@ -516,7 +532,20 @@ function App() {
         {splitMode === 'range' && <input type="text" placeholder="e.g. 1-3, 5, 7-10" value={splitRange} onChange={e => SSplitRange(e.target.value)} style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: '8px', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }} />}
       </div>
 
-      <button disabled={!file} onClick={splitPdfAction}>Split PDF & Download</button>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <button disabled={!file} onClick={() => splitPdfAction(false)}>Split & Download</button>
+        <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Preview Result</button>
+      </div>
+
+      {previewUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
+        <b>👀 Output Preview Ready</b>
+        {previewType === 'pdf' ? (
+          <iframe src={previewUrl} title="PDF Preview" style={{ width: '100%', height: '300px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+        ) : (
+          <p style={{ fontSize: '12px', color: 'var(--muted)' }}>ZIP archive generated with all split pages successfully.</p>
+        )}
+        <button onClick={() => dl(dataBlobFromUrl(previewUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}>Download File</button>
+      </div>}
     </div>;
 
     if (n === 'PAN Master Hub') return <div className="form" style={{ gap: '16px' }}>
@@ -728,6 +757,10 @@ function App() {
       <input type="file" onChange={e => SFile(e.target.files?.[0])} />
       <button onClick={() => { SM(`Executed ${n} successfully!`); }}>Run & Process</button>
     </div>;
+  }
+
+  function dataBlobFromUrl(url) {
+    return fetch(url).then(res => res.blob());
   }
 
   return <div className="app">
