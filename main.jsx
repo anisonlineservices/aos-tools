@@ -608,13 +608,11 @@ function App() {
   }
 
   return <div className="app">
-    <header>
+    <header style={{ gap: '12px' }}>
       <button className="hamb" onClick={() => SMob(!mobile)}>{mobile ? <X /> : <Menu />}</button>
 
       <button className="brand" onClick={() => { ST(null); SC('All Tools'); localStorage.removeItem('aos-active-tool-v1'); }}>
-        <span className="logo">
-          <img src="./logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
-        </span>
+        <span className="logo">A</span>
         <span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
       </button>
 
