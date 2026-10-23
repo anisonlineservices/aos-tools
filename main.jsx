@@ -170,7 +170,11 @@ function App() {
   const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Video Tools', 'AI Tools', 'Special Tools', 'Advanced Features', 'Government Portals'];
 
   const shown = useMemo(
-    () => items.filter(x => (cat === 'All Tools' || x.cat === cat) && x.name.toLowerCase().includes(query.toLowerCase())),
+    () => items.filter(x => {
+      const matchQuery = x.name.toLowerCase().includes(query.toLowerCase());
+      if (cat === 'All Tools') return matchQuery;
+      return x.cat === cat && matchQuery;
+    }),
     [cat, query]
   );
 
@@ -754,7 +758,6 @@ function App() {
         Quickly resize photos and signatures according to official NSDL/UTIITSL requirements, view document checklist guidelines, and access direct official portal links.
       </p>
 
-      {/* Official Links Section */}
       <div style={{ background: 'var(--soft)', padding: '15px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <b style={{ fontSize: '12px', color: 'var(--brand)' }}>Direct Official Portals & Services</b>
         <div className="portal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
@@ -769,7 +772,6 @@ function App() {
 
       <hr />
 
-      {/* Resizer Tool Section */}
       <div style={{ border: '1px solid var(--line)', padding: '15px', borderRadius: '12px' }}>
         <b style={{ fontSize: '12px' }}>Official Document Resizer & Cropper</b>
         <label>Select Document Type</label>
@@ -779,11 +781,36 @@ function App() {
           <option>Supporting Document (PDF/A, Max 300KB)</option>
         </select>
         <input type="file" accept="image/*,.pdf" onChange={e => SFile(e.target.files?.[0])} style={{ marginTop: '10px' }} />
-        <button style={{ marginTop: '10px' }} disabled={!file} onClick={() => {
+        <button style={{ marginTop: '10px' }} disabled={!file} onClick={async () => {
           if (panType.includes('Supporting')) {
-            SM('For supporting documents, ensure files are compressed under 300 KB per page in PDF format.');
+            try {
+              if (file.type === 'application/pdf') {
+                const buf = await file.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(buf);
+                const compressedBytes = await pdfDoc.save();
+                dl(new Blob([compressedBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
+                SM(`Supporting PDF processed (${Math.round(compressedBytes.size / 1024)} KB). Ready for portal upload.`);
+              } else {
+                const u = URL.createObjectURL(file), im = new Image();
+                im.onload = async () => {
+                  const pdfDoc = await PDFDocument.create();
+                  const page = pdfDoc.addPage([595, 842]);
+                  const bytes = await file.arrayBuffer();
+                  const embedded = file.type === 'image/png' ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+                  page.drawImage(embedded, { x: 50, y: 100, width: 495, height: 600 });
+                  const pdfBytes = await pdfDoc.save();
+                  dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
+                  SM(`Converted image to PDF/A supporting document (${Math.round(pdfBytes.size / 1024)} KB).`);
+                  URL.revokeObjectURL(u);
+                };
+                im.src = u;
+              }
+            } catch {
+              SM('Could not process supporting document.');
+            }
             return;
           }
+
           const u = URL.createObjectURL(file), im = new Image();
           im.onload = () => {
             const isPhoto = panType.includes('Photo');
@@ -805,10 +832,9 @@ function App() {
             URL.revokeObjectURL(u);
           };
           im.src = u;
-        }}>Resize & Download JPEG</button>
+        }}>Resize & Download File</button>
       </div>
 
-      {/* Guidelines Accordion / Box */}
       <div style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--soft)', padding: '15px', borderRadius: '12px', lineHeight: '1.6' }}>
         <b>📋 Official PAN Document Guidelines Summary:</b>
         <br />• <b>Photograph:</b> 3.5 x 2.5 cm (213x213 pixels), 200 DPI color, White/light background, Max 20 KB (JPEG).
@@ -932,7 +958,7 @@ function App() {
 
       <div className="search">
         <Search />
-        <input value={query} placeholder="Search tools..." onChange={e => { SQ(e.target.value); SC('All Tools'); }} />
+        <input value={query} placeholder="Search tools..." onChange={e => { SQ(e.target.value); }} />
       </div>
 
       <div className="head-actions">
@@ -978,7 +1004,7 @@ function App() {
         </label>
 
         <label className="side-field">Accent colour
-          <input type="color" value={accent} onChange={e => SA(e.target.value)} />
+          <input type="color" value={accent} onChange={e => SA(e.target.value)}/>
         </label>
 
         <div className="privacy">
