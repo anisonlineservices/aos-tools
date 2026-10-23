@@ -680,9 +680,13 @@ function App() {
           </select>
         </label>
 
-        <label className="side-field">{t.accentColour}
-          <input type="color" value={accent} onChange={e => SA(e.target.value)}/>
-        </label>
+        <div className="side-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <span>{t.accentColour}</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input type="color" value={accent} onChange={e => SA(e.target.value)} style={{ flex: 1, height: '36px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px' }} />
+            <button style={{ padding: '6px 10px', fontSize: '11px', fontWeight: '600', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }} onClick={() => SA('#052f52')}>Default</button>
+          </div>
+        </div>
 
         <div className="privacy">
           <LockKeyhole />
