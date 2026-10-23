@@ -138,7 +138,7 @@ const translations = {
     localToolsNote: "टूल्स लोकल डिवाईसवर चालतात.",
     footerText: "AOS Tools · फ्री-फर्स्ट",
     resetAppearance: "रीसेट करा",
-    readyInWorkspace: "वर्कस्पेसमध्ये तयार आहे"
+    readyInWorkspace: "वर्कस्पेसमध्ये तयार है"
   }
 };
 
@@ -267,14 +267,9 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
-  // Initialize active tool from URL Hash or localStorage
+  // Initialize active tool from LocalStorage
   const [active, ST] = useState(() => {
     try {
-      const hash = window.location.hash.replace('#tool=', '');
-      if (hash) {
-        const found = items.find(i => encodeURIComponent(i.name) === hash);
-        if (found) return found;
-      }
       const savedTool = localStorage.getItem('aos-active-tool-v1');
       return savedTool ? JSON.parse(savedTool) : null;
     } catch {
@@ -294,23 +289,23 @@ function App() {
   const [panFileObj, SPanFileObj] = useState(null);
   const [panPortal, SPanPortal] = useState('NSDL');
 
-  // Robust Browser Hash Routing & Back Button Handler
+  // Bulletproof Browser History & Back Button Trap Fix
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#tool=', '');
-      if (hash) {
-        const found = items.find(i => encodeURIComponent(i.name) === hash);
-        if (found) {
-          ST(found);
-        }
-      } else {
+    // Push a dummy history state on initial load so back button has something to pop safely
+    window.history.pushState({ page: 'home' }, '');
+
+    const handlePopState = (e) => {
+      if (active) {
+        // If a tool is open, intercept back button and close the tool instead of closing the browser tab
         ST(null);
+        localStorage.removeItem('aos-active-tool-v1');
+        window.history.pushState({ page: 'home' }, '');
       }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [active]);
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -345,12 +340,8 @@ function App() {
     try {
       if (active) {
         localStorage.setItem('aos-active-tool-v1', JSON.stringify(active));
-        window.location.hash = `tool=${encodeURIComponent(active.name)}`;
       } else {
         localStorage.removeItem('aos-active-tool-v1');
-        if (window.location.hash.includes('tool=')) {
-          window.history.pushState("", document.title, window.location.pathname + window.location.search);
-        }
       }
     } catch { }
   }, [active]);
@@ -385,6 +376,7 @@ function App() {
     SFiles([]);
     SPanPreview('');
     SPanFileObj(null);
+    window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
   function content() {
@@ -612,7 +604,7 @@ function App() {
     <header>
       <button className="hamb" onClick={() => SMob(!mobile)}>{mobile ? <X /> : <Menu />}</button>
 
-      <button className="brand" onClick={() => { ST(null); SC('All Tools'); window.location.hash = ''; }}>
+      <button className="brand" onClick={() => { ST(null); SC('All Tools'); }}>
         <span className="logo">A</span>
         <span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
       </button>
@@ -643,7 +635,7 @@ function App() {
       <aside className={mobile ? 'open' : ''}>
         <div className="label">{t.workspace}</div>
 
-        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); window.location.hash = ''; }}>
+        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); }}>
           {c === 'PDF Tools' ? <FileText /> : c === 'Image Tools' ? <ImageIcon /> : c === 'Video Tools' ? <Video /> : c === 'AI Tools' ? <Sparkles /> : <Wrench />}
           <span>{c}</span><ChevronRight />
         </button>)}
@@ -726,7 +718,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); window.location.hash = ''; }}>← All tools</button>
+          <button className="back" onClick={() => ST(null)}>← All tools</button>
           <div className="tool-heading">
             <span className="tile"><Wrench /></span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
