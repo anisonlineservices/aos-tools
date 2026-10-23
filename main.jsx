@@ -130,7 +130,16 @@ function App() {
   const [font, SF] = useState(() => loadAppearance().font ?? 'Inter');
   const [accent, SA] = useState(() => loadAppearance().accent ?? '#052f52');
 
-  const [active, ST] = useState(null);
+  // Active tool state restored from localStorage to prevent refresh redirect
+  const [active, ST] = useState(() => {
+    try {
+      const savedTool = localStorage.getItem('aos-active-tool-v1');
+      return savedTool ? JSON.parse(savedTool) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [msg, SM] = useState('');
   const [file, SFile] = useState(null);
   const [files, SFiles] = useState([]);
@@ -175,6 +184,7 @@ function App() {
     [cat, query]
   );
 
+  // Apply Appearance & Font instantly
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = dark ? 'dark' : 'light';
@@ -185,74 +195,29 @@ function App() {
     root.style.setProperty('--font', `"${safeFont}", system-ui, sans-serif`);
   }, [dark, accent, font]);
 
+  // Save appearance settings
   useEffect(() => {
     try {
       localStorage.setItem('aos-appearance-v1', JSON.stringify({ dark, lang, font, accent }));
     } catch { }
   }, [dark, lang, font, accent]);
 
+  // Save active tool to prevent refresh redirect
+  useEffect(() => {
+    try {
+      if (active) {
+        localStorage.setItem('aos-active-tool-v1', JSON.stringify(active));
+      } else {
+        localStorage.removeItem('aos-active-tool-v1');
+      }
+    } catch { }
+  }, [active]);
+
   useEffect(() => {
     try {
       localStorage.setItem('aos-khata-v1', JSON.stringify(entries));
     } catch { }
   }, [entries]);
-
-  useEffect(() => {
-    if (!clientId || user) return;
-
-    const checkGoogleLoaded = setInterval(() => {
-      const google = window.google?.accounts?.id;
-      const el = document.getElementById('google-button');
-
-      if (google && el) {
-        clearInterval(checkGoogleLoaded);
-        try {
-          google.initialize({
-            client_id: clientId,
-            callback: (r) => {
-              try {
-                if (!r?.credential) {
-                  SM('Google sign-in response was missing.');
-                  return;
-                }
-                const payload = r.credential.split('.')[1];
-                const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-                const p = JSON.parse(atob(base64));
-
-                const profile = {
-                  name: typeof p.name === 'string' ? p.name : '',
-                  email: typeof p.email === 'string' ? p.email : '',
-                  picture: typeof p.picture === 'string' ? p.picture : ''
-                };
-
-                if (!profile.name || !profile.email) {
-                  SM('Google profile details were incomplete.');
-                  return;
-                }
-
-                localStorage.setItem(GOOGLE_PROFILE_KEY, JSON.stringify(profile));
-                SU(profile);
-                SM('Signed in successfully.');
-              } catch {
-                SM('Unable to read Google sign-in response.');
-              }
-            }
-          });
-
-          el.replaceChildren();
-          google.renderButton(el, {
-            theme: dark ? 'filled_black' : 'outline',
-            size: 'medium',
-            shape: 'pill'
-          });
-        } catch (e) {
-          console.error('Google Sign-In error:', e);
-        }
-      }
-    }, 200);
-
-    return () => clearInterval(checkGoogleLoaded);
-  }, [clientId, dark, user]);
 
   const dl = (blob, name) => {
     const u = URL.createObjectURL(blob), a = document.createElement('a');
@@ -351,7 +316,7 @@ function App() {
                 ctx.fillRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
                 
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.45); // Strong compression to ensure < 300KB
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.45);
                 const resBlob = dataBlob(compressedDataUrl);
                 const imgBytes = await resBlob.arrayBuffer();
                 const embedded = await pdfDoc.embedJpg(imgBytes);
@@ -364,7 +329,7 @@ function App() {
                 URL.revokeObjectURL(u);
               };
               img.onerror = () => {
-                SM('Kripya supporting document ke liye scanned PDF ki jagah photo/image (JPG/PNG) upload karein taaki tool use 300KB ke andar compress kar sake.');
+                SM('Kripya supporting document ke liye image (JPG/PNG) upload karein taaki tool size 300KB ke andar compress kar sake.');
                 URL.revokeObjectURL(u);
               };
               img.src = u;
@@ -403,7 +368,6 @@ function App() {
         <br />• <b>Photograph:</b> 3.5 x 2.5 cm (213x213 pixels), Max 20 KB (JPEG).
         <br />• <b>Signature:</b> 2.0 x 4.5 cm (300x80 pixels), Max 10 KB (JPEG).
         <br />• <b>Supporting Docs:</b> PDF format, Max 300 KB per page.
-        <br /><span style={{ color: '#b95b22' }}>⚠️ Note: Supporting documents ke liye image (JPG/PNG) upload karein taaki tool size 300 KB se kam kar sake.</span>
       </div>
     </div>;
 
@@ -435,9 +399,7 @@ function App() {
 
         <button className="round" onClick={() => SD(!dark)}>{dark ? <Sun /> : <Moon />}</button>
 
-        <div id="google-button">
-          {!clientId && !user && <button className="signin" onClick={() => SM('Set VITE_GOOGLE_CLIENT_ID in .env.local')}>Sign in</button>}
-        </div>
+        <div id="google-button"></div>
 
         {user && <span className="profile">
           {user.picture && <img src={user.picture} alt="" />}
@@ -455,7 +417,7 @@ function App() {
       <aside className={mobile ? 'open' : ''}>
         <div className="label">WORKSPACE</div>
 
-        {cats.map(c => <button className={'nav ' + (cat === c ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); }}>
+        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); }}>
           {c === 'PDF Tools' ? <FileText /> : c === 'Image Tools' ? <ImageIcon /> : c === 'Video Tools' ? <Video /> : c === 'AI Tools' ? <Sparkles /> : <Wrench />}
           <span>{c}</span><ChevronRight />
         </button>)}
@@ -533,7 +495,7 @@ function App() {
             </button>)}
           </div>
         </> : <section className="workspace">
-          <button className="back" onClick={()=>ST(null)}>← All tools</button>
+          <button className="back" onClick={() => ST(null)}>← All tools</button>
           <div className="tool-heading">
             <span className="tile"><Wrench /></span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
