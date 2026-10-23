@@ -163,7 +163,7 @@ function App() {
   const [barcodeText, SBarcodeText] = useState('AOS-TOOLS-123');
   const [zipNames, SZipNames] = useState([]);
   const [qrType, SQrType] = useState('URL or plain text');
-  const [panType, SPanType] = useState('Photo');
+  const [panType, SPanType] = useState('Photo (213x213 px, Max 20KB)');
 
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -748,35 +748,73 @@ function App() {
       {zipNames.length > 0 && <ul>{zipNames.map(x => <li key={x}>{x}</li>)}</ul>}
     </div>;
 
-    if (n === 'PAN Master Hub') return <div className="form">
-      <p>Resize/crop a photo or signature locally.</p>
-      <label>Document type</label>
-      <select value={panType} onChange={e => SPanType(e.target.value)}>
-        <option>Photo</option><option>Signature</option><option>Supporting document</option>
-      </select>
-      <input type="file" accept="image/*" onChange={e => SFile(e.target.files?.[0])} />
-      <button disabled={!file} onClick={() => {
-        const u = URL.createObjectURL(file), im = new Image();
-        im.onload = () => {
-          let w = panType === 'Photo' ? 213 : panType === 'Signature' ? 300 : 1200;
-          let h = panType === 'Photo' ? 213 : panType === 'Signature' ? 80 : 1600;
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          const ctx = c.getContext('2d');
-          ctx.fillStyle = 'white'; ctx.fillRect(0, 0, w, h);
-          const scale = Math.min(w / im.naturalWidth, h / im.naturalHeight);
-          const dw = im.naturalWidth * scale, dh = im.naturalHeight * scale;
-          ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
-          c.toBlob(b => {
-            if (b) {
-              dl(b, `aos-pan-${panType.toLowerCase().replace(/ /g, '-')}.jpg`);
-              SM('Resized image downloaded.');
-            } else SM('Export failed.');
-          }, 'image/jpeg', .85);
-          URL.revokeObjectURL(u);
-        };
-        im.src = u;
-      }}>Resize and download JPEG</button>
+    if (n === 'PAN Master Hub') return <div className="form" style={{ gap: '20px' }}>
+      <p><b>Anis Online Services — Official PAN Hub & Document Resizer</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.6' }}>
+        Quickly resize photos and signatures according to official NSDL/UTIITSL requirements, view document checklist guidelines, and access direct official portal links.
+      </p>
+
+      {/* Official Links Section */}
+      <div style={{ background: 'var(--soft)', padding: '15px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <b style={{ fontSize: '12px', color: 'var(--brand)' }}>Direct Official Portals & Services</b>
+        <div className="portal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+          <a href="https://onlineservices.proteantech.in/paam/endUserRegisterContact.html" target="_blank" rel="noreferrer">Online PAN Application ↗</a>
+          <a href="https://onlineservices.proteantech.in/paam/ReprintEPan.html" target="_blank" rel="noreferrer">Request Reprint of PAN ↗</a>
+          <a href="https://onlineservices.proteantech.in/paam/requestAndDownloadEPAN.html" target="_blank" rel="noreferrer">Download e-PAN / XML ↗</a>
+          <a href="https://tin.tin.proteantech.in/pantan/StatusTrack.html" target="_blank" rel="noreferrer">Track PAN Status ↗</a>
+          <a href="https://www.pan.utiitsl.com/PAN/newA.html" target="_blank" rel="noreferrer">UTIITSL Portal ↗</a>
+          <a href="https://www.incometax.gov.in/iec/foportal/" target="_blank" rel="noreferrer">Income Tax Department ↗</a>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* Resizer Tool Section */}
+      <div style={{ border: '1px solid var(--line)', padding: '15px', borderRadius: '12px' }}>
+        <b style={{ fontSize: '12px' }}>Official Document Resizer & Cropper</b>
+        <label>Select Document Type</label>
+        <select value={panType} onChange={e => SPanType(e.target.value)}>
+          <option>Photo (213x213 px, Max 20KB)</option>
+          <option>Signature (300x80 px, Max 10KB)</option>
+          <option>Supporting Document (PDF/A, Max 300KB)</option>
+        </select>
+        <input type="file" accept="image/*,.pdf" onChange={e => SFile(e.target.files?.[0])} style={{ marginTop: '10px' }} />
+        <button style={{ marginTop: '10px' }} disabled={!file} onClick={() => {
+          if (panType.includes('Supporting')) {
+            SM('For supporting documents, ensure files are compressed under 300 KB per page in PDF format.');
+            return;
+          }
+          const u = URL.createObjectURL(file), im = new Image();
+          im.onload = () => {
+            const isPhoto = panType.includes('Photo');
+            let w = isPhoto ? 213 : 300;
+            let h = isPhoto ? 213 : 80;
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = 'white'; ctx.fillRect(0, 0, w, h);
+            const scale = Math.min(w / im.naturalWidth, h / im.naturalHeight);
+            const dw = im.naturalWidth * scale, dh = im.naturalHeight * scale;
+            ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+            c.toBlob(b => {
+              if (b) {
+                dl(b, `aos-pan-${isPhoto ? 'photo' : 'signature'}.jpg`);
+                SM(`Resized successfully (${w}x${h}px, ${Math.round(b.size / 1024)} KB). Meets official specs!`);
+              } else SM('Export failed.');
+            }, 'image/jpeg', .85);
+            URL.revokeObjectURL(u);
+          };
+          im.src = u;
+        }}>Resize & Download JPEG</button>
+      </div>
+
+      {/* Guidelines Accordion / Box */}
+      <div style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--soft)', padding: '15px', borderRadius: '12px', lineHeight: '1.6' }}>
+        <b>📋 Official PAN Document Guidelines Summary:</b>
+        <br />• <b>Photograph:</b> 3.5 x 2.5 cm (213x213 pixels), 200 DPI color, White/light background, Max 20 KB (JPEG).
+        <br />• <b>Signature:</b> 2.0 x 4.5 cm (300x80 pixels), Black ink on white box, Max 10 KB (JPEG).
+        <br />• <b>Supporting Docs (POI, POA, PODB):</b> Aadhaar Card, Voter ID, Passport, or Birth Certificate. PDF format, Max 300 KB per page at 200 DPI.
+      </div>
     </div>;
 
     if (n === 'HTML Editor') return <div className="form">
@@ -871,7 +909,6 @@ function App() {
       }}>Make HTML file</button>
     </div>;
 
-    // Standard Functional Module Form for other tools (PDF conversion, AI, Video etc.)
     return <div className="form">
       <p>Run module: <strong>{n}</strong>. Select your file or input below.</p>
       <input type="file" onChange={e => SFile(e.target.files?.[0])} />
