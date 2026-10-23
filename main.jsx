@@ -70,7 +70,7 @@ const portals = [
   ['National Testing Agency', 'https://nta.ac.in/']
 ].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true }));
 
-const makeItems = (arr, cat, working = []) => arr.map(name => ({ name, cat, working: true }));
+const makeItems = (arr, cat) => arr.map(name => ({ name, cat, working: true }));
 
 const items = [
   ...makeItems(CATALOG.pdf, 'PDF Tools'),
@@ -157,7 +157,6 @@ function App() {
   const [utilText, SUtilText] = useState('');
   const [utilOut, SUtilOut] = useState('');
   const [utilNum, SUtilNum] = useState('100');
-  const [utilNum2, SUtilNum2] = useState('18');
   const [utilChoice, SUtilChoice] = useState('km-mi');
   const [utilRate, SUtilRate] = useState('8.5');
   const [utilMonths, SUtilMonths] = useState('60');
@@ -197,68 +196,63 @@ function App() {
     } catch { }
   }, [entries]);
 
+  // Fixed Google Sign-In initialization to prevent flickering
   useEffect(() => {
-    let cancelled = false;
+    if (!clientId || user) return;
 
-    const initGoogle = () => {
-      if (cancelled) return;
+    const checkGoogleLoaded = setInterval(() => {
       const google = window.google?.accounts?.id;
       const el = document.getElementById('google-button');
 
-      if (!google || !clientId || !el) return;
+      if (google && el) {
+        clearInterval(checkGoogleLoaded);
+        try {
+          google.initialize({
+            client_id: clientId,
+            callback: (r) => {
+              try {
+                if (!r?.credential) {
+                  SM('Google sign-in response was missing.');
+                  return;
+                }
+                const payload = r.credential.split('.')[1];
+                const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+                const p = JSON.parse(atob(base64));
 
-      try {
-        google.initialize({
-          client_id: clientId,
-          callback: (r) => {
-            try {
-              if (!r?.credential) {
-                SM('Google sign-in response was missing.');
-                return;
+                const profile = {
+                  name: typeof p.name === 'string' ? p.name : '',
+                  email: typeof p.email === 'string' ? p.email : '',
+                  picture: typeof p.picture === 'string' ? p.picture : ''
+                };
+
+                if (!profile.name || !profile.email) {
+                  SM('Google profile details were incomplete.');
+                  return;
+                }
+
+                localStorage.setItem(GOOGLE_PROFILE_KEY, JSON.stringify(profile));
+                SU(profile);
+                SM('Signed in successfully.');
+              } catch {
+                SM('Unable to read Google sign-in response.');
               }
-              const payload = r.credential.split('.')[1];
-              const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-              const p = JSON.parse(atob(base64));
-
-              const profile = {
-                name: typeof p.name === 'string' ? p.name : '',
-                email: typeof p.email === 'string' ? p.email : '',
-                picture: typeof p.picture === 'string' ? p.picture : ''
-              };
-
-              if (!profile.name || !profile.email) {
-                SM('Google profile details were incomplete.');
-                return;
-              }
-
-              localStorage.setItem(GOOGLE_PROFILE_KEY, JSON.stringify(profile));
-              SU(profile);
-              SM('Signed in successfully.');
-            } catch {
-              SM('Unable to read Google sign-in response.');
             }
-          }
-        });
+          });
 
-        el.replaceChildren();
-        google.renderButton(el, {
-          theme: dark ? 'filled_black' : 'outline',
-          size: 'medium',
-          shape: 'pill'
-        });
-      } catch (e) {
-        console.error('Google Sign-In initialization error:', e);
+          el.replaceChildren();
+          google.renderButton(el, {
+            theme: dark ? 'filled_black' : 'outline',
+            size: 'medium',
+            shape: 'pill'
+          });
+        } catch (e) {
+          console.error('Google Sign-In error:', e);
+        }
       }
-    };
+    }, 200);
 
-    initGoogle();
-    const timer = setInterval(initGoogle, 500);
-
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [clientId, dark]);
+    return () => clearInterval(checkGoogleLoaded);
+  }, [clientId, dark, user]);
 
   const dl = (blob, name) => {
     const u = URL.createObjectURL(blob), a = document.createElement('a');
@@ -483,14 +477,14 @@ function App() {
             SM(`Extracted ${ids.size} page(s).`);
           } else if (n === 'Rotate PDF') {
             doc.getPages().forEach(pg => pg.setRotation({ type: 'degrees', angle: ((pg.getRotation().angle + rotation) % 360) }));
-            dl(new Blob([await doc.save()], { type: 'application/pdf' }), 'aos-rotated.pdf');
+            dl(new Blob([await out.save()], { type: 'application/pdf' }), 'aos-rotated.pdf');
             SM('Rotated all pages and downloaded.');
           } else {
             doc.getPages().forEach((pg, i) => {
               const { width } = pg.getSize();
               pg.drawText(String(i + 1), { x: width - 42, y: 18, size: 10 });
             });
-            dl(new Blob([await doc.save()], { type: 'application/pdf' }), 'aos-numbered.pdf');
+            dl(new Blob([await out.save()], { type: 'application/pdf' }), 'aos-numbered.pdf');
             SM('Page numbers added at the bottom right.');
           }
         } catch (e) { SM(e.message || 'PDF processing failed.'); }
@@ -560,7 +554,7 @@ function App() {
     </div>;
 
     if (['Text Case Converter', 'Word Counter', 'JSON Formatter / Validator', 'Base64 Encoder / Decoder', 'URL Encoder / Decoder', 'Lorem Ipsum Generator', 'Text to Slug Converter', 'Notepad', 'AI Text Tools', 'AI Image Tools', 'AI Summarizer', 'AI Translator', 'Background Remover', 'Video Compressor', 'Video Converter', 'Video to MP3', 'Video Trimmer', 'Google Drive Integration', 'Google Sign in / Sign up', 'User Dashboard', 'Batch File Processing', 'Drag and Drop', 'Search and Categories', 'Privacy and Security', 'PDF to Word', 'PDF to PowerPoint', 'PDF to Excel', 'Word to PDF', 'PowerPoint to PDF', 'Excel to PDF', 'Edit PDF', 'PDF to JPG', 'Sign PDF', 'Watermark Remover', 'Watermark Stamp', 'HTML to PDF', 'Unlock PDF', 'Protect PDF', 'PDF to PDF/A', 'Repair PDF', 'Scan to PDF', 'OCR PDF', 'Compare PDF', 'Redact PDF', 'PDF to Text', 'PDF Forms', 'Translate PDF', 'PDF to Markdown', 'PDF to Text (alternate)', 'Ebook to PDF', 'PDF to Ebook', 'EPUB to PDF', 'PDF to MOBI', 'AZW to PDF', 'PDF to AZW3'].includes(n)) return <div className="form">
-      <p>Module active: <strong>{n}</strong>. Enter or process your text/data below.</p>
+      <p>Module active: <strong>{n}</strong>. Enter or process your content below.</p>
       <textarea rows="6" value={utilText} onChange={e => SUtilText(e.target.value)} placeholder="Type, paste content or instructions here..." />
       <div className="row">
         <button onClick={() => {
@@ -697,8 +691,7 @@ function App() {
       <textarea value={qr} onChange={e => SQr(e.target.value)} />
       <button onClick={async () => {
         try {
-          let value = qr;
-          SQi(await QRCode.toDataURL(value, { width: 300 }));
+          SQi(await QRCode.toDataURL(qr, { width: 300 }));
           SM('QR generated locally.');
         } catch { SM('QR generation failed'); }
       }}>Generate QR</button>
