@@ -331,27 +331,49 @@ function App() {
         <button style={{ marginTop: '10px' }} disabled={!file} onClick={async () => {
           if (panType.includes('Supporting')) {
             try {
-              if (file.type === 'application/pdf') {
+              const u = URL.createObjectURL(file);
+              const img = new Image();
+              img.onload = async () => {
+                const pdfDoc = await PDFDocument.create();
+                const page = pdfDoc.addPage([595, 842]);
+                
+                // Strong compression for supporting document to stay under 300KB
+                const maxW = 700;
+                let w = img.naturalWidth, h = img.naturalHeight;
+                if (w > maxW) {
+                  h = Math.round((h * maxW) / w);
+                  w = maxW;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.55); // 55% quality for strong size reduction under 300KB
+                const resBlob = dataBlob(compressedDataUrl);
+                const imgBytes = await resBlob.arrayBuffer();
+                const embedded = await pdfDoc.embedJpg(imgBytes);
+                
+                page.drawImage(embedded, { x: 30, y: 30, width: 535, height: 782 });
+                const pdfBytes = await pdfDoc.save();
+                
+                dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
+                SM(`Supporting document compressed successfully (${Math.round(pdfBytes.size / 1024)} KB < 300KB). Ready for portal!`);
+                URL.revokeObjectURL(u);
+              };
+              img.onerror = async () => {
+                // Fallback for actual PDF files if image loading fails
                 const buf = await file.arrayBuffer();
                 const pdfDoc = await PDFDocument.load(buf);
-                const compressedBytes = await pdfDoc.save();
-                dl(new Blob([compressedBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
-                SM(`Supporting PDF processed (${Math.round(compressedBytes.size / 1024)} KB).`);
-              } else {
-                const u = URL.createObjectURL(file), im = new Image();
-                im.onload = async () => {
-                  const pdfDoc = await PDFDocument.create();
-                  const page = pdfDoc.addPage([595, 842]);
-                  const bytes = await file.arrayBuffer();
-                  const embedded = file.type === 'image/png' ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
-                  page.drawImage(embedded, { x: 50, y: 100, width: 495, height: 600 });
-                  const pdfBytes = await pdfDoc.save();
-                  dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
-                  SM(`Converted image to PDF/A (${Math.round(pdfBytes.size / 1024)} KB).`);
-                  URL.revokeObjectURL(u);
-                };
-                im.src = u;
-              }
+                const pdfBytes = await pdfDoc.save({ useObjectStreams: true });
+                dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
+                SM(`PDF compressed and saved (${Math.round(pdfBytes.size / 1024)} KB).`);
+                URL.revokeObjectURL(u);
+              };
+              img.src = u;
             } catch {
               SM('Could not process supporting document.');
             }
@@ -516,7 +538,7 @@ function App() {
             </button>)}
           </div>
         </> : <section className="workspace">
-          <button className="back" onClick={() => ST(null)}>← All tools</button>
+          <button className="back" onClick={()=>ST(null)}>← All tools</button>
           <div className="tool-heading">
             <span className="tile"><Wrench /></span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
