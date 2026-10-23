@@ -22,7 +22,7 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    font: "Font",
+    language: "Language",
     accentColour: "Accent colour",
     privacyMinded: "Privacy-minded",
     localToolsNote: "Tools process locally.",
@@ -44,7 +44,7 @@ const translations = {
     workspace: "वर्कस्पेस",
     specialWorkspace: "विशेष वर्कस्पेस",
     personalize: "कस्टमाइज करें",
-    font: "फॉन्ट",
+    language: "भाषा (Language)",
     accentColour: "रंग (Accent)",
     privacyMinded: "गोपनीयता सुरक्षित",
     localToolsNote: "टूल्स आपके डिवाइस पर चलते हैं।",
@@ -66,7 +66,7 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    font: "Font",
+    language: "Language",
     accentColour: "Accent colour",
     privacyMinded: "Privacy-minded",
     localToolsNote: "Tools locally process hote hain.",
@@ -88,7 +88,7 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    font: "எழுத்துரு (Font)",
+    language: "மொழி (Language)",
     accentColour: "நிறம்",
     privacyMinded: "தனியுரிமை",
     localToolsNote: "கோப்புகள் உங்கள் சாதனத்தில் செயலாக்கப்படும்.",
@@ -110,7 +110,7 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    font: "ఫాంట్",
+    language: "భాష (Language)",
     accentColour: "రంగు",
     privacyMinded: "గోప్యత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
@@ -132,7 +132,7 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    font: "फॉन्ट",
+    language: "भाषा (Language)",
     accentColour: "रंग",
     privacyMinded: "गोपनीयता सुरक्षित",
     localToolsNote: "टूल्स लोकल डिवाईसवर चालतात.",
@@ -263,7 +263,6 @@ function App() {
 
   const [dark, SD] = useState(() => loadAppearance().dark ?? false);
   const [lang, SL] = useState(() => loadAppearance().lang ?? 'English');
-  const [font, SF] = useState(() => loadAppearance().font ?? 'Inter');
   const [accent, SA] = useState(() => loadAppearance().accent ?? '#052f52');
 
   const t = translations[lang] || translations['English'];
@@ -321,24 +320,19 @@ function App() {
     [cat, query]
   );
 
-  // Apply Appearance & Font instantly (Fixing global inheritance)
+  // Apply Accent & Theme
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = dark ? 'dark' : 'light';
     root.style.setProperty('--brand', accent);
-
-    const fonts = ['Inter', 'Roboto', 'Poppins', 'DM Sans', 'Manrope', 'Space Grotesk', 'Open Sans', 'Work Sans', 'Arial', 'Georgia'];
-    const safeFont = fonts.includes(font) ? font : 'Inter';
-    root.style.setProperty('--font', `"${safeFont}", system-ui, sans-serif`);
-    document.body.style.fontFamily = `"${safeFont}", system-ui, sans-serif`;
-  }, [dark, accent, font]);
+  }, [dark, accent]);
 
   // Save appearance settings
   useEffect(() => {
     try {
-      localStorage.setItem('aos-appearance-v1', JSON.stringify({ dark, lang, font, accent }));
+      localStorage.setItem('aos-appearance-v1', JSON.stringify({ dark, lang, accent }));
     } catch { }
-  }, [dark, lang, font, accent]);
+  }, [dark, lang, accent]);
 
   // Save active tool
   useEffect(() => {
@@ -531,15 +525,6 @@ function App() {
       </div>
 
       <div className="head-actions">
-        <select value={lang} onChange={e => SL(e.target.value)}>
-          <option>English</option>
-          <option>Hindi</option>
-          <option>Hinglish</option>
-          <option>Tamil</option>
-          <option>Telugu</option>
-          <option>Marathi</option>
-        </select>
-
         <button className="round" onClick={() => SD(!dark)}>{dark ? <Sun /> : <Moon />}</button>
 
         <div id="google-button"></div>
@@ -578,9 +563,14 @@ function App() {
 
         <div className="label">{t.personalize}</div>
 
-        <label className="side-field">{t.font}
-          <select value={font} onChange={e => SF(e.target.value)}>
-            {['Inter', 'Roboto', 'Poppins', 'DM Sans', 'Manrope', 'Space Grotesk', 'Open Sans', 'Work Sans', 'Arial', 'Georgia'].map(f => <option key={f}>{f}</option>)}
+        <label className="side-field">{t.language}
+          <select value={lang} onChange={e => SL(e.target.value)}>
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Hinglish</option>
+            <option>Tamil</option>
+            <option>Telugu</option>
+            <option>Marathi</option>
           </select>
         </label>
 
@@ -654,7 +644,6 @@ function App() {
       <button onClick={() => {
         SD(false);
         SA('#052f52');
-        SF('Inter');
         SL('English');
       }}> <RotateCcw size={14} /> {t.resetAppearance}</button>
     </footer>
