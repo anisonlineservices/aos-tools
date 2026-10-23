@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ExternalLink } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -313,7 +313,7 @@ function App() {
   // Split PDF States & Preview State
   const [splitMode, SSplitMode] = useState('all');
   const [splitRange, SSplitRange] = useState('');
-  const [previewBlobUrl, SPreviewBlobUrl] = useState('');
+  const [previewDataUrl, SPreviewDataUrl] = useState('');
   const [previewType, SPreviewType] = useState('');
 
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
@@ -412,7 +412,14 @@ function App() {
     }
   }
 
-  // Split PDF with Direct Blob URL Embed Support
+  const blobToDataUrl = (blob) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
+
   async function splitPdfAction(shouldPreview = false) {
     try {
       if (!file) { SM('Please select a PDF file first.'); return; }
@@ -431,9 +438,10 @@ function App() {
         }
         const content = await zip.generateAsync({ type: 'blob' });
         if (shouldPreview) {
-          SPreviewBlobUrl(URL.createObjectURL(content));
+          const dataUrl = await blobToDataUrl(content);
+          SPreviewDataUrl(dataUrl);
           SPreviewType('zip');
-          SM(`Generated ZIP containing ${totalPages} pages ready for preview & download.`);
+          SM(`Generated ZIP containing ${totalPages} pages ready for download.`);
         } else {
           dl(content, 'aos-split-pages.zip');
           SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
@@ -469,9 +477,10 @@ function App() {
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
 
         if (shouldPreview) {
-          SPreviewBlobUrl(URL.createObjectURL(blob));
+          const dataUrl = await blobToDataUrl(blob);
+          SPreviewDataUrl(dataUrl);
           SPreviewType('pdf');
-          SM(`Extracted ${pagesToExtract.length} pages successfully. Ready for preview!`);
+          SM(`Extracted ${pagesToExtract.length} pages successfully. Ready to download!`);
         } else {
           dl(blob, 'aos-split-range.pdf');
           SM(`Successfully extracted ${pagesToExtract.length} pages into a new PDF.`);
@@ -492,7 +501,7 @@ function App() {
     SM('');
     SFile(null);
     SFiles([]);
-    SPreviewBlobUrl('');
+    SPreviewDataUrl('');
     window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
@@ -510,7 +519,7 @@ function App() {
       <p><b>Split PDF File Locally</b></p>
       <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract individual pages or specific page ranges from your PDF securely in your browser.</p>
       
-      <input type="file" accept=".pdf,application/pdf" onChange={e => { SFile(e.target.files?.[0]); SPreviewBlobUrl(''); }} />
+      <input type="file" accept=".pdf,application/pdf" onChange={e => { SFile(e.target.files?.[0]); SPreviewDataUrl(''); }} />
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
@@ -527,22 +536,13 @@ function App() {
 
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <button disabled={!file} onClick={() => splitPdfAction(false)}>Split & Download</button>
-        <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Preview Result</button>
+        <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Prepare File</button>
       </div>
 
-      {previewBlobUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
-        <b>👀 Output Preview Ready</b>
-        {previewType === 'pdf' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <iframe src={previewBlobUrl} title="PDF Preview" style={{ width: '100%', height: '320px', border: '1px solid var(--line)', borderRadius: '6px', background: '#fff' }} />
-            <a href={previewBlobUrl} target="_blank" rel="noreferrer" style={{ background: 'var(--brand)', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', textAlign: 'center' }}>
-              Open Fullscreen PDF
-            </a>
-          </div>
-        ) : (
-          <p style={{ fontSize: '12px', color: 'var(--muted)' }}>ZIP archive generated with all split pages successfully.</p>
-        )}
-        <button onClick={() => fetch(previewBlobUrl).then(res => res.blob()).then(blob => dl(blob, previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip'))}>Download File</button>
+      {previewDataUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
+        <b>✅ Processed File Ready</b>
+        <p style={{ fontSize: '12px', color: 'var(--muted)' }}>Your split file has been generated successfully and is ready to download.</p>
+        <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File Now</button>
       </div>}
     </div>;
 
@@ -615,7 +615,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -674,7 +674,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-signature-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Signature resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Signature resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -755,6 +755,18 @@ function App() {
       <input type="file" onChange={e => SFile(e.target.files?.[0])} />
       <button onClick={() => { SM(`Executed ${n} successfully!`); }}>Run & Process</button>
     </div>;
+  }
+
+  function dataBlobFromUrl(dataUrl) {
+    const arr = dataUrl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   }
 
   return <div className="app">
@@ -905,7 +917,7 @@ function App() {
     </div>
 
     <footer>
-      <span>© {new Date().getFullYear()} {t.footerText}</span>
+      <span>© {new Date://getFullYear()} {t.footerText}</span>
       <button onClick={() => {
         SD(false);
         SA('#052f52');
