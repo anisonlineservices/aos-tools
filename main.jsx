@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -28,7 +28,8 @@ const translations = {
     localToolsNote: "Tools process locally.",
     footerText: "AOS Tools · Free-first",
     resetAppearance: "Reset appearance",
-    readyInWorkspace: "Ready in your workspace"
+    readyInWorkspace: "Ready in your workspace",
+    comingSoonText: "Coming Soon"
   },
   Hindi: {
     freeToolkit: "✦ निःशुल्क टूलकिट",
@@ -50,7 +51,8 @@ const translations = {
     localToolsNote: "टूल्स आपके डिवाइस पर चलते हैं।",
     footerText: "AOS टूल · फ्री-फर्स्ट",
     resetAppearance: "रीसेट करें",
-    readyInWorkspace: "आपके वर्कस्पेस में तैयार है"
+    readyInWorkspace: "आपके वर्कस्पेस में तैयार है",
+    comingSoonText: "जल्द आ रहा है"
   },
   Hinglish: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
@@ -72,7 +74,8 @@ const translations = {
     localToolsNote: "Tools locally process hote hain.",
     footerText: "AOS Tools · Free-first",
     resetAppearance: "Reset appearance",
-    readyInWorkspace: "Ready in your workspace"
+    readyInWorkspace: "Ready in your workspace",
+    comingSoonText: "Coming Soon"
   },
   Tamil: {
     freeToolkit: "✦ இலவச கருவிகள் தொகுப்பு",
@@ -94,7 +97,8 @@ const translations = {
     localToolsNote: "கோப்புகள் உங்கள் சாதனத்தில் செயலாக்கப்படும்.",
     footerText: "AOS Tools · இலவசம்",
     resetAppearance: "அமைப்புகளை மீட்டமை",
-    readyInWorkspace: "பயன்படுத்த தயார்"
+    readyInWorkspace: "பயன்படுத்த தயார்",
+    comingSoonText: "விரைவில் வருகிறது"
   },
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
@@ -116,7 +120,8 @@ const translations = {
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
-    readyInWorkspace: "సిద్ధంగా ఉంది"
+    readyInWorkspace: "సిద్ధంగా ఉంది",
+    comingSoonText: "త్వరలో వస్తుంది"
   },
   Marathi: {
     freeToolkit: "✦ मोफत साधनकिट",
@@ -138,7 +143,8 @@ const translations = {
     localToolsNote: "टूल्स लोकल डिवाईसवर चालतात.",
     footerText: "AOS Tools · फ्री-फर्स्ट",
     resetAppearance: "रीसेट करा",
-    readyInWorkspace: "वर्कस्पेसमध्ये तयार है"
+    readyInWorkspace: "वर्कस्पेसमध्ये तयार है",
+    comingSoonText: "लवकरच येत आहे"
   }
 };
 
@@ -204,9 +210,17 @@ const portals = [
   ['India Post', 'https://www.indiapost.gov.in/'],
   ['CBSE', 'https://www.cbse.gov.in/'],
   ['National Testing Agency', 'https://nta.ac.in/']
-].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true }));
+].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
 
-const makeItems = (arr, cat) => arr.map(name => ({ name, cat, working: true }));
+// Helper to define which tools are fully working vs coming soon
+function getToolStatus(cat, name) {
+  if (cat === 'PDF Tools' && name === 'Merge PDF') return 'ready';
+  if (cat === 'Special Tools' && name === 'PAN Master Hub') return 'ready';
+  if (cat === 'Government Portals') return 'portal';
+  return 'soon';
+}
+
+const makeItems = (arr, cat) => arr.map(name => ({ name, cat, working: getToolStatus(cat, name) === 'ready', status: getToolStatus(cat, name) }));
 
 const items = [
   ...makeItems(CATALOG.pdf, 'PDF Tools'),
@@ -401,6 +415,10 @@ function App() {
   }
 
   function tool(tObj) {
+    if (tObj.status === 'soon') {
+      SM(`Tool "${tObj.name}" is coming soon! We are building it.`);
+      return;
+    }
     ST(tObj);
     SM('');
     SFile(null);
@@ -672,7 +690,7 @@ function App() {
         <hr />
 
         <div className="label">{t.specialWorkspace}</div>
-        <button className={'nav ' + (active?.name === 'PAN Master Hub' ? 'sel' : '')} onClick={() => { tool({ name: 'PAN Master Hub', cat: 'Special Tools' }); SMob(false); }}>
+        <button className={'nav ' + (active?.name === 'PAN Master Hub' ? 'sel' : '')} onClick={() => { tool({ name: 'PAN Master Hub', cat: 'Special Tools', status: 'ready' }); SMob(false); }}>
           <Wrench />
           <span>PAN Master Hub</span>
           <ChevronRight />
@@ -743,10 +761,24 @@ function App() {
                 {getTileIcon(tItem.cat)}
               </span>
               <b>{tItem.name}</b>
-              <p>{tItem.url ? 'Official portal · opens in a new tab' : t.readyInWorkspace}</p>
+              <p>{tItem.url ? 'Official portal · opens in a new tab' : (tItem.status === 'ready' ? t.readyInWorkspace : t.comingSoonText)}</p>
               <span className="card-foot">
-                <em className="ready">{tItem.url ? 'Portal link' : 'Ready'}</em>
-                <ChevronRight size={15} />
+                {tItem.status === 'portal' ? (
+                  <>
+                    <em className="ready">Portal link</em>
+                    <ChevronRight size={15} />
+                  </>
+                ) : tItem.status === 'ready' ? (
+                  <>
+                    <em className="ready">Ready</em>
+                    <ChevronRight size={15} />
+                  </>
+                ) : (
+                  <>
+                    <em className="soon" style={{ color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '3px' }}><Clock size={12} /> Coming Soon</em>
+                    <ChevronRight size={15} style={{ opacity: 0.4 }} />
+                  </>
+                )}
               </span>
             </button>)}
           </div>
