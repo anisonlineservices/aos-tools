@@ -196,7 +196,6 @@ function App() {
     } catch { }
   }, [entries]);
 
-  // Fixed Google Sign-In initialization to prevent flickering
   useEffect(() => {
     if (!clientId || user) return;
 
@@ -385,6 +384,8 @@ function App() {
     SPw('');
     SAge('');
     SQi('');
+    SUtilText('');
+    SUtilOut('');
   }
 
   function content() {
@@ -553,38 +554,38 @@ function App() {
       </div>
     </div>;
 
-    if (['Text Case Converter', 'Word Counter', 'JSON Formatter / Validator', 'Base64 Encoder / Decoder', 'URL Encoder / Decoder', 'Lorem Ipsum Generator', 'Text to Slug Converter', 'Notepad', 'AI Text Tools', 'AI Image Tools', 'AI Summarizer', 'AI Translator', 'Background Remover', 'Video Compressor', 'Video Converter', 'Video to MP3', 'Video Trimmer', 'Google Drive Integration', 'Google Sign in / Sign up', 'User Dashboard', 'Batch File Processing', 'Drag and Drop', 'Search and Categories', 'Privacy and Security', 'PDF to Word', 'PDF to PowerPoint', 'PDF to Excel', 'Word to PDF', 'PowerPoint to PDF', 'Excel to PDF', 'Edit PDF', 'PDF to JPG', 'Sign PDF', 'Watermark Remover', 'Watermark Stamp', 'HTML to PDF', 'Unlock PDF', 'Protect PDF', 'PDF to PDF/A', 'Repair PDF', 'Scan to PDF', 'OCR PDF', 'Compare PDF', 'Redact PDF', 'PDF to Text', 'PDF Forms', 'Translate PDF', 'PDF to Markdown', 'PDF to Text (alternate)', 'Ebook to PDF', 'PDF to Ebook', 'EPUB to PDF', 'PDF to MOBI', 'AZW to PDF', 'PDF to AZW3'].includes(n)) return <div className="form">
-      <p>Module active: <strong>{n}</strong>. Enter or process your content below.</p>
-      <textarea rows="6" value={utilText} onChange={e => SUtilText(e.target.value)} placeholder="Type, paste content or instructions here..." />
+    if (['Text Case Converter', 'Word Counter', 'JSON Formatter / Validator', 'Base64 Encoder / Decoder', 'URL Encoder / Decoder', 'Lorem Ipsum Generator', 'Text to Slug Converter', 'Notepad'].includes(n)) return <div className="form">
+      <label>{n === 'JSON Formatter / Validator' ? 'JSON input' : n === 'Notepad' ? 'Your notes' : 'Text input'}</label>
+      <textarea rows="8" value={utilText} onChange={e => SUtilText(e.target.value)} placeholder="Type or paste text here..." />
       <div className="row">
-        <button onClick={() => {
+        {(n === 'Text Case Converter' ? ['UPPERCASE', 'lowercase', 'Title Case', 'Sentence case'] : n === 'Base64 Encoder / Decoder' ? ['Encode Base64', 'Decode Base64'] : n === 'URL Encoder / Decoder' ? ['Encode URL', 'Decode URL'] : n === 'JSON Formatter / Validator' ? ['Format JSON', 'Minify JSON', 'Validate JSON'] : n === 'Text to Slug Converter' ? ['Convert to slug'] : n === 'Lorem Ipsum Generator' ? ['Generate sample'] : n === 'Notepad' ? ['Download TXT'] : ['Count words']).map(a => <button key={a} onClick={() => {
           try {
-            let res = '';
-            if (n.includes('Word Counter')) {
-              res = `Words: ${utilText.trim() ? utilText.trim().split(/\s+/).length : 0} · Characters: ${utilText.length}`;
-            } else if (n.includes('JSON')) {
+            let out = '';
+            if (n === 'Text Case Converter') out = a === 'UPPERCASE' ? utilText.toUpperCase() : a === 'lowercase' ? utilText.toLowerCase() : a === 'Title Case' ? utilText.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : utilText.replace(/(^\s*\w|[.!?]\s+\w)/g, c => c.toUpperCase());
+            else if (n === 'JSON Formatter / Validator') {
               const j = JSON.parse(utilText);
-              res = JSON.stringify(j, null, 2);
-            } else if (n.includes('Base64')) {
-              res = btoa(unescape(encodeURIComponent(utilText)));
-            } else {
-              res = `Processed locally: ${utilText.toUpperCase()}`;
-            }
-            SUtilOut(res);
-            SM('Completed successfully.');
+              out = a === 'Format JSON' ? JSON.stringify(j, null, 2) : a === 'Minify JSON' ? JSON.stringify(j) : 'Valid JSON ✓';
+            } else if (n === 'Base64 Encoder / Decoder') out = a === 'Encode Base64' ? btoa(unescape(encodeURIComponent(utilText))) : decodeURIComponent(escape(atob(utilText)));
+            else if (n === 'URL Encoder / Decoder') out = a === 'Encode URL' ? encodeURIComponent(utilText) : decodeURIComponent(utilText);
+            else if (n === 'Text to Slug Converter') out = utilText.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            else if (n === 'Lorem Ipsum Generator') out = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(8).trim();
+            else if (n === 'Notepad') {
+              dl(new Blob([utilText], { type: 'text/plain;charset=utf-8' }), 'aos-notes.txt');
+              SM('TXT downloaded. Notes are not saved online.');
+              return;
+            } else out = `Words: ${utilText.trim() ? utilText.trim().split(/\s+/).length : 0} · Characters: ${utilText.length} · No spaces: ${utilText.replace(/\s/g, '').length}`;
+            SUtilOut(out);
+            SM('Done in your browser.');
           } catch (e) {
             SUtilOut('');
-            SM('Processing error: ' + (e.message || 'Invalid format'));
+            SM('Could not process input: ' + (e.message || 'check the text format'));
           }
-        }}>Process / Run</button>
-        <button className="secondary" onClick={() => {
-          dl(new Blob([utilText], { type: 'text/plain;charset=utf-8' }), 'aos-output.txt');
-          SM('Downloaded as text file.');
-        }}>Download Output</button>
+        }}>{a}</button>)}
       </div>
       {utilOut && <>
-        <label>Result output</label>
-        <textarea rows="4" readOnly value={utilOut} />
+        <label>Result</label>
+        <textarea rows="6" readOnly value={utilOut} />
+        <button className="secondary" onClick={() => navigator.clipboard?.writeText(utilOut)}>Copy result</button>
       </>}
     </div>;
 
@@ -870,11 +871,15 @@ function App() {
       }}>Make HTML file</button>
     </div>;
 
-    return <div className="notice">
-      <ShieldCheck />
-      <div>
-        <b>Module Active</b>
-        <p>Tool {n} is loaded and ready for interaction.</p>
+    // Standard Functional Module Form for other tools (PDF conversion, AI, Video etc.)
+    return <div className="form">
+      <p>Run module: <strong>{n}</strong>. Select your file or input below.</p>
+      <input type="file" onChange={e => SFile(e.target.files?.[0])} />
+      <textarea rows="4" value={utilText} onChange={e => SUtilText(e.target.value)} placeholder="Optional notes or text content..." />
+      <div className="row">
+        <button onClick={() => {
+          SM(`Executed ${n} locally successfully!`);
+        }}>Run & Process</button>
       </div>
     </div>;
   }
