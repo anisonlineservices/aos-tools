@@ -10,7 +10,7 @@ import './style.css';
 const translations = {
   English: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
-    heroTitle1: "Free tools.",
+    heroTitle1: "AOS tools.",
     heroTitle2: "One simple workspace.",
     heroDesc: "PDF, image, video, AI and everyday utilities in one place.",
     catalogModules: "catalog modules",
