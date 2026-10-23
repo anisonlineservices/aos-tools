@@ -320,7 +320,7 @@ function App() {
     [cat, query]
   );
 
-  // Apply Accent & Theme
+  // Apply Theme and Accent
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = dark ? 'dark' : 'light';
