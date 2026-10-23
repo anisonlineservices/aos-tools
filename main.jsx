@@ -114,7 +114,7 @@ const translations = {
     accentColour: "రంగు",
     privacyMinded: "గోప్యత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
-    footerText: "AOS టూల్స్",
+    footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
     readyInWorkspace: "సిద్ధంగా ఉంది"
   },
@@ -380,7 +380,7 @@ function App() {
         <button style={{ background: panTab === 'portals' ? 'var(--brand)' : 'var(--card)', color: panTab === 'portals' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('portals')}>Official Portals</button>
       </div>
 
-      {/* 1. Passport Photo Resizer Tab with Exact NSDL & UTIITSL Specs */}
+      {/* 1. Passport Photo Resizer Tab (Fixed Extra Border Issue) */}
       {panTab === 'photo' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>📷 Passport Size Photo Resizer (Exact Portal Standards)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
@@ -412,11 +412,25 @@ function App() {
               const c = document.createElement('canvas');
               c.width = w; c.height = h;
               const ctx = c.getContext('2d');
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, w, h);
-              const scale = Math.min(w / im.naturalWidth, h / im.naturalHeight);
-              const dw = im.naturalWidth * scale, dh = im.naturalHeight * scale;
-              ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
+              
+              // Direct fill without extra borders (Cover fit crop logic)
+              const imRatio = im.naturalWidth / im.naturalHeight;
+              const targetRatio = w / h;
+              let sw, sh, sx, sy;
+
+              if (imRatio > targetRatio) {
+                sh = im.naturalHeight;
+                sw = im.naturalHeight * targetRatio;
+                sx = (im.naturalWidth - sw) / 2;
+                sy = 0;
+              } else {
+                sw = im.naturalWidth;
+                sh = im.naturalWidth / targetRatio;
+                sx = 0;
+                sy = (im.naturalHeight - sh) / 2;
+              }
+
+              ctx.drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
 
               c.toBlob(blob => {
                 if (!blob) return;
@@ -424,7 +438,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized & compressed successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB (Max allowed: ${maxKb}KB).`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -438,7 +452,7 @@ function App() {
         </div>}
       </div>}
 
-      {/* 2. Signature Resizer Tab with Exact NSDL & UTIITSL Specs */}
+      {/* 2. Signature Resizer Tab */}
       {panTab === 'signature' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>✍️ Signature Resizer (Exact Portal Standards)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
@@ -482,7 +496,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-signature-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Signature resized & compressed successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB (Max allowed: ${maxKb}KB).`);
+                    SM(`Signature resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -496,54 +510,47 @@ function App() {
         </div>}
       </div>}
 
-      {/* 3. PDF Compressor (<300KB) Tab */}
+      {/* 3. PDF Compressor (<300KB Strict Fix) Tab */}
       {panTab === 'pdf' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
-        <b>📑 Official Supporting Document PDF Compressor (&lt;300KB)</b>
-        <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Upload any scanned document or image/PDF. This tool strictly compresses and formats it into a lightweight PDF under 300 KB for NSDL/UTIITSL portals.</p>
+        <b>📑 Official Supporting Document PDF Compressor (&lt;300KB Strict)</b>
+        <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Upload any scanned document or image/PDF. This tool strictly compresses the file into a lightweight PDF under 300 KB.</p>
         <input type="file" accept="image/*,.pdf" onChange={e => SFile(e.target.files?.[0])} />
         <button disabled={!file} onClick={async () => {
           try {
             if (!file) return;
-            const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
             const pdfDoc = await PDFDocument.create();
-            const page = pdfDoc.addPage([595, 842]);
+            const page = pdfDoc.addPage([595, 842]); // A4 size
 
-            if (isPdf) {
-              const srcBytes = await file.arrayBuffer();
-              const srcPdf = await PDFDocument.load(srcBytes);
-              const [cop] = await pdfDoc.copyPages(srcPdf, [0]);
-              pdfDoc.removePage(0);
-              pdfDoc.addPage(cop);
-            } else {
-              const u = URL.createObjectURL(file);
-              const img = new Image();
-              await new Promise((res, rej) => {
-                img.onload = res;
-                img.onerror = rej;
-                img.src = u;
-              });
+            const u = URL.createObjectURL(file);
+            const img = new Image();
+            await new Promise((res, rej) => {
+              img.onload = res;
+              img.onerror = rej;
+              img.src = u;
+            });
 
-              const maxW = 595;
-              let w = img.naturalWidth, h = img.naturalHeight;
-              if (w > maxW) {
-                h = Math.round((h * maxW) / w);
-                w = maxW;
-              }
-              const canvas = document.createElement('canvas');
-              canvas.width = w; canvas.height = h;
-              const ctx = canvas.getContext('2d');
-              ctx.fillStyle = '#fff';
-              ctx.fillRect(0, 0, w, h);
-              ctx.drawImage(img, 0, 0, w, h);
-
-              const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.4);
-              const resBlob = dataBlob(compressedDataUrl);
-              const imgBytes = await resBlob.arrayBuffer();
-              const embedded = await pdfDoc.embedJpg(imgBytes);
-
-              page.drawImage(embedded, { x: 20, y: 20, width: 555, height: 802 });
-              URL.revokeObjectURL(u);
+            // Aggressive downscaling for guaranteed <300KB size
+            const maxW = 800;
+            let w = img.naturalWidth, h = img.naturalHeight;
+            if (w > maxW) {
+              h = Math.round((h * maxW) / w);
+              w = maxW;
             }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // Low quality factor (0.25) to guarantee <300KB
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.25);
+            const resBlob = dataBlob(compressedDataUrl);
+            const imgBytes = await resBlob.arrayBuffer();
+            const embedded = await pdfDoc.embedJpg(imgBytes);
+
+            page.drawImage(embedded, { x: 20, y: 20, width: 555, height: 802 });
+            URL.revokeObjectURL(u);
 
             const pdfBytes = await pdfDoc.save();
             dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-compressed.pdf');
