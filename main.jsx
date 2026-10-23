@@ -6,7 +6,7 @@ import QRCode from 'qrcode';
 import JSZip from 'jszip';
 import './style.css';
 
-// Language Dictionary for Instant Translation
+// Complete Language Dictionary for Instant UI Translation
 const translations = {
   English: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
@@ -113,7 +113,7 @@ const translations = {
     font: "ఫాంట్",
     accentColour: "రంగు",
     privacyMinded: "గోప్యత",
-    localToolsNode: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
+    localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్స్",
     resetAppearance: "రీసెట్ చేయండి",
     readyInWorkspace: "సిద్ధంగా ఉంది"
@@ -356,63 +356,6 @@ function App() {
     } catch { }
   }, [entries]);
 
-  useEffect(() => {
-    if (!clientId || user) return;
-
-    const checkGoogleLoaded = setInterval(() => {
-      const google = window.google?.accounts?.id;
-      const el = document.getElementById('google-button');
-
-      if (google && el) {
-        clearInterval(checkGoogleLoaded);
-        try {
-          google.initialize({
-            client_id: clientId,
-            callback: (r) => {
-              try {
-                if (!r?.credential) {
-                  SM('Google sign-in response was missing.');
-                  return;
-                }
-                const payload = r.credential.split('.')[1];
-                const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-                const p = JSON.parse(atob(base64));
-
-                const profile = {
-                  name: typeof p.name === 'string' ? p.name : '',
-                  email: typeof p.email === 'string' ? p.email : '',
-                  picture: typeof p.picture === 'string' ? p.picture : ''
-                };
-
-                if (!profile.name || !profile.email) {
-                  SM('Google profile details were incomplete.');
-                  return;
-                }
-
-                localStorage.setItem(GOOGLE_PROFILE_KEY, JSON.stringify(profile));
-                SU(profile);
-                SM('Signed in successfully.');
-              } catch {
-                SM('Unable to read Google sign-in response.');
-              }
-            }
-          });
-
-          el.replaceChildren();
-          google.renderButton(el, {
-            theme: dark ? 'filled_black' : 'outline',
-            size: 'medium',
-            shape: 'pill'
-          });
-        } catch (e) {
-          console.error('Google Sign-In error:', e);
-        }
-      }
-    }, 200);
-
-    return () => clearInterval(checkGoogleLoaded);
-  }, [clientId, dark, user]);
-
   const dl = (blob, name) => {
     const u = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = u;
@@ -436,8 +379,8 @@ function App() {
     }
   }
 
-  function tool(t) {
-    ST(t);
+  function tool(tObj) {
+    ST(tObj);
     SM('');
     SFile(null);
     SFiles([]);
@@ -588,7 +531,12 @@ function App() {
 
       <div className="head-actions">
         <select value={lang} onChange={e => SL(e.target.value)}>
-          <option>English</option><option>Hindi</option><option>Hinglish</option><option>Tamil</option><option>Telugu</option><option>Marathi</option>
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Hinglish</option>
+          <option>Tamil</option>
+          <option>Telugu</option>
+          <option>Marathi</option>
         </select>
 
         <button className="round" onClick={() => SD(!dark)}>{dark ? <Sun /> : <Moon />}</button>
