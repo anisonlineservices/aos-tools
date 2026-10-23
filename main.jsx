@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ExternalLink } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -149,7 +149,7 @@ const translations = {
 };
 
 const CATALOG = {
-  "pdf": ["Merge PDF", "Split PDF", "Compress PDF", "PDF to Word", "PDF to PowerPoint", "PDF to Excel", "Word to PDF", "PowerPoint to PDF", "Excel to PDF", "Edit PDF", "PDF to JPG", "JPG to PDF", "Sign PDF", "Watermark Remover", "Watermark Stamp", "Rotate PDF", "HTML to PDF", "Unlock PDF", "Protect PDF", "Organize PDF", "PDF to PDF/A", "Repair PDF", "Page numbers", "Scan to PDF", "OCR PDF", "Compare PDF", "Redact PDF", "PDF to Text", "Crop PDF", "PDF Forms", "AI Summarizer", "Translate PDF", "PDF to Markdown", "PDF to Text (alternate)", "Ebook to PDF", "PDF to Ebook", "EPUB to PDF", "PDF to MOBI", "AZW to PDF", "PDF to AZW3"],
+  "pdf": ["Merge PDF", "Split PDF", "Compress PDF", "PDF to Word", "PDF to PowerPoint", "PDF to Excel", "Word to PDF", "PowerPoint to PDF", "Excel to PDF", "Edit PDF", "PDF to JPG", "JPG to PDF", "Sign PDF", "Watermark Remover", "Watermark Stamp", "Rotate PDF", "HTML to PDF", "Unlock PDF", "Protect PDF", "Organize PDF", "PDF to PDF/A", "Repair PDF", "Page numbers", "Scan to PDF", "OCR PDF", "Compare PDF", "Redact PDF", "PDF to Text", "Crop PDF", "PDF Forms", "AI Summarizer", "Translate PDF", "PDF to Markdown", "PDF to Text (alternate)", "Ebook to PDF", "PDF to Ebook", "EPUB to PDF", "PDF to MOBI", "AZW to PDF", "AZW to AZW3"],
   "imgs": ["Compress Image", "Compress JPG", "Compress JPEG", "Compress PNG", "Compress BMP", "Compress WEBP", "Image to JPG", "Image to PNG", "Image to JPEG", "Image to WEBP", "Image to BMP", "Crop Image", "Resize Image", "Rotate Image", "Crop Circle Image", "Image Merge", "Photo Signature Resize", "GIF Maker", "GIF to Images", "Image Quality Enhancer", "Passport Photo Sheet"],
   "special": ["Barcode Generator", "Password Generator", "Image to Color", "Color Extractor", "ZIP Extractor", "Real Client Ledger Diary (Khata)", "Age Calculator", "Image to URL / HTML", "HTML Editor", "QR Code Generator", "PAN Master Hub"]
 };
@@ -234,13 +234,6 @@ const items = [
 function localDate(d = new Date()) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
-}
-
-function dataBlob(url) {
-  const [m, b] = url.split(',');
-  const s = atob(b), a = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
-  return new Blob([a], { type: m.match(/:(.*?);/)[1] });
 }
 
 function loadAppearance() {
@@ -537,10 +530,14 @@ function App() {
         <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Preview Result</button>
       </div>
 
-      {previewUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
-        <b>👀 Output Preview Ready</b>
+      {previewUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
+        <b>👀 Output Ready</b>
         {previewType === 'pdf' ? (
-          <iframe src={previewUrl} title="PDF Preview" style={{ width: '100%', height: '300px', border: '1px solid var(--line)', borderRadius: '6px' }} />
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <a href={previewUrl} target="_blank" rel="noreferrer" style={{ background: 'var(--brand)', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <ExternalLink size={14} /> Open PDF in New Tab
+            </a>
+          </div>
         ) : (
           <p style={{ fontSize: '12px', color: 'var(--muted)' }}>ZIP archive generated with all split pages successfully.</p>
         )}
