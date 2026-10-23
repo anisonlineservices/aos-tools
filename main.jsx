@@ -337,8 +337,7 @@ function App() {
                 const pdfDoc = await PDFDocument.create();
                 const page = pdfDoc.addPage([595, 842]);
                 
-                // Strong compression for supporting document to stay under 300KB
-                const maxW = 700;
+                const maxW = 600;
                 let w = img.naturalWidth, h = img.naturalHeight;
                 if (w > maxW) {
                   h = Math.round((h * maxW) / w);
@@ -352,7 +351,7 @@ function App() {
                 ctx.fillRect(0, 0, w, h);
                 ctx.drawImage(img, 0, 0, w, h);
                 
-                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.55); // 55% quality for strong size reduction under 300KB
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.45); // Strong compression to ensure < 300KB
                 const resBlob = dataBlob(compressedDataUrl);
                 const imgBytes = await resBlob.arrayBuffer();
                 const embedded = await pdfDoc.embedJpg(imgBytes);
@@ -364,13 +363,8 @@ function App() {
                 SM(`Supporting document compressed successfully (${Math.round(pdfBytes.size / 1024)} KB < 300KB). Ready for portal!`);
                 URL.revokeObjectURL(u);
               };
-              img.onerror = async () => {
-                // Fallback for actual PDF files if image loading fails
-                const buf = await file.arrayBuffer();
-                const pdfDoc = await PDFDocument.load(buf);
-                const pdfBytes = await pdfDoc.save({ useObjectStreams: true });
-                dl(new Blob([pdfBytes], { type: 'application/pdf' }), 'aos-pan-supporting-doc.pdf');
-                SM(`PDF compressed and saved (${Math.round(pdfBytes.size / 1024)} KB).`);
+              img.onerror = () => {
+                SM('Kripya supporting document ke liye scanned PDF ki jagah photo/image (JPG/PNG) upload karein taaki tool use 300KB ke andar compress kar sake.');
                 URL.revokeObjectURL(u);
               };
               img.src = u;
@@ -409,6 +403,7 @@ function App() {
         <br />• <b>Photograph:</b> 3.5 x 2.5 cm (213x213 pixels), Max 20 KB (JPEG).
         <br />• <b>Signature:</b> 2.0 x 4.5 cm (300x80 pixels), Max 10 KB (JPEG).
         <br />• <b>Supporting Docs:</b> PDF format, Max 300 KB per page.
+        <br /><span style={{ color: '#b95b22' }}>⚠️ Note: Supporting documents ke liye image (JPG/PNG) upload karein taaki tool size 300 KB se kam kar sake.</span>
       </div>
     </div>;
 
