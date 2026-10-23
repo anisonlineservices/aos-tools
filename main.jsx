@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -10,7 +10,7 @@ import './style.css';
 const translations = {
   English: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
-    heroTitle1: "AOS tools.",
+    heroTitle1: "Free tools.",
     heroTitle2: "One simple workspace.",
     heroDesc: "PDF, image, video, AI and everyday utilities in one place.",
     catalogModules: "catalog modules",
@@ -255,6 +255,28 @@ function loadGoogleProfile() {
   } catch {
     return null;
   }
+}
+
+function getTileClass(cat) {
+  if (cat === 'PDF Tools') return 'pdf';
+  if (cat === 'Image Tools') return 'image';
+  if (cat === 'Video Tools') return 'video';
+  if (cat === 'AI Tools') return 'ai';
+  if (cat === 'Special Tools') return 'special';
+  if (cat === 'Advanced Features') return 'advanced';
+  if (cat === 'Government Portals') return 'portals';
+  return 'wrench';
+}
+
+function getTileIcon(cat) {
+  if (cat === 'PDF Tools') return <FileText />;
+  if (cat === 'Image Tools') return <ImageIcon />;
+  if (cat === 'Video Tools') return <Video />;
+  if (cat === 'AI Tools') return <Sparkles />;
+  if (cat === 'Special Tools') return <Wrench />;
+  if (cat === 'Advanced Features') return <Cpu />;
+  if (cat === 'Government Portals') return <Globe />;
+  return <Wrench />;
 }
 
 function App() {
@@ -643,7 +665,7 @@ function App() {
         <div className="label">{t.workspace}</div>
 
         {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); localStorage.removeItem('aos-active-tool-v1'); }}>
-          {c === 'PDF Tools' ? <FileText /> : c === 'Image Tools' ? <ImageIcon /> : c === 'Video Tools' ? <Video /> : c === 'AI Tools' ? <Sparkles /> : <Wrench />}
+          {getTileIcon(c)}
           <span>{c}</span><ChevronRight />
         </button>)}
 
@@ -717,8 +739,8 @@ function App() {
 
           <div className="grid">
             {shown.map(tItem => <button key={tItem.cat + tItem.name} className="card" onClick={() => tItem.url ? window.open(tItem.url, '_blank', 'noopener,noreferrer') : tool(tItem)}>
-              <span className={'tile ' + tItem.cat.toLowerCase().split(' ')[0]}>
-                {tItem.cat === 'PDF Tools' ? <FileText /> : tItem.cat === 'Image Tools' ? <ImageIcon /> : tItem.cat === 'Video Tools' ? <Video /> : tItem.cat === 'AI Tools' ? <Sparkles /> : <Wrench />}
+              <span className={'tile ' + getTileClass(tItem.cat)}>
+                {getTileIcon(tItem.cat)}
               </span>
               <b>{tItem.name}</b>
               <p>{tItem.url ? 'Official portal · opens in a new tab' : t.readyInWorkspace}</p>
@@ -731,7 +753,7 @@ function App() {
         </> : <main className="workspace">
           <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }}>← All tools</button>
           <div className="tool-heading">
-            <span className="tile"><Wrench /></span>
+            <span className={'tile ' + getTileClass(active.cat)}>{getTileIcon(active.cat)}</span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
           </div>
           {content()}
