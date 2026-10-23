@@ -100,6 +100,34 @@ return {};
 }
 }
 
+/* Save the Google profile locally for this browser/device only. */
+const GOOGLE_PROFILE_KEY = 'aos-google-profile-v1';
+
+function loadGoogleProfile() {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(GOOGLE_PROFILE_KEY) || 'null'
+    );
+
+    if (
+      saved &&
+      typeof saved.name === 'string' &&
+      typeof saved.email === 'string'
+    ) {
+      return {
+        name: saved.name,
+        email: saved.email,
+        picture:
+          typeof saved.picture === 'string' ? saved.picture : ''
+      };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 function App(){
 const[query,SQ]=useState('');
 const[cat,SC]=useState('All Tools');
@@ -131,7 +159,7 @@ catch{return []}
 
 const[ledger,SLed]=useState({date:localDate(),name:'',services:'',token:'',government:'0',charge:'0',status:'Pending'});
 const[ledgerSearch,SLSearch]=useState('');
-const[user,SU]=useState(null);
+const[user,SU]=useState(()=>loadGoogleProfile());
 const[mobile,SMob]=useState(false);
 const[utilText,SUtilText]=useState('');
 const[utilOut,SUtilOut]=useState('');
@@ -179,7 +207,7 @@ localStorage.setItem('aos-khata-v1',JSON.stringify(entries));
 }catch{}
 },[entries]);
 
-
+/* Google Sign-In button setup and local profile saving. */
 useEffect(() => {
   let cancelled = false;
   let initialized = false;
@@ -199,19 +227,46 @@ useEffect(() => {
         client_id: clientId,
         callback: (r) => {
           try {
+            if (!r?.credential) {
+              SM('Google sign-in response was missing.');
+              return;
+            }
+
             const payload = r.credential.split('.')[1];
-            const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+            const base64 = payload
+              .replace(/-/g, '+')
+              .replace(/_/g, '/');
+
             const p = JSON.parse(atob(base64));
 
-            SU({
-              name: p.name,
-              email: p.email,
-              picture: p.picture
-            });
+            const profile = {
+              name: typeof p.name === 'string' ? p.name : '',
+              email: typeof p.email === 'string' ? p.email : '',
+              picture: typeof p.picture === 'string' ? p.picture : ''
+            };
 
-            SM('Signed in for display only. This is not secure backend authentication.');
+            if (!profile.name || !profile.email) {
+              SM('Google profile details were incomplete.');
+              return;
+            }
+
+            try {
+              localStorage.setItem(
+                GOOGLE_PROFILE_KEY,
+                JSON.stringify(profile)
+              );
+
+              SU(profile);
+
+              SM(
+                'Profile saved on this device. This is not secure backend authentication.'
+              );
+            } catch {
+              SU(profile);
+              SM('Signed in for this session, but profile could not be saved.');
+            }
           } catch {
-            SM('Unable to read Google sign-in response');
+            SM('Unable to read Google sign-in response.');
           }
         }
       });
@@ -233,7 +288,6 @@ useEffect(() => {
 
   const retryTimer = window.setInterval(() => {
     if (cancelled || initialized) return;
-
     renderGoogleButton();
   }, 300);
 
@@ -242,7 +296,6 @@ useEffect(() => {
     window.clearInterval(retryTimer);
   };
 }, [clientId, dark]);
-
 
 const dl=(blob,name)=>{
 const u=URL.createObjectURL(blob),a=document.createElement('a');
@@ -947,9 +1000,16 @@ return <div className="app">
 </div>
 
 {user&&<span className="profile">
-{user.picture&&<img src={user.picture}/>}
+{user.picture&&<img src={user.picture} alt=""/>}
 {user.name}
-<button onClick={()=>SU(null)}>Sign out</button>
+<button onClick={()=>{
+  try {
+    localStorage.removeItem(GOOGLE_PROFILE_KEY);
+  } catch {}
+
+  SU(null);
+  SM('Signed out on this device.');
+}}>Sign out</button>
 </span>}
 </div>
 </header>
@@ -1057,6 +1117,5 @@ SL('English');
 </footer>
 </div>;
 }
-
 
 createRoot(document.getElementById('root')).render(<App/>);
