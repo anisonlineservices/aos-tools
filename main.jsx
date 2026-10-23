@@ -995,6 +995,15 @@ function App() {
 
         <hr />
 
+        <div className="label">SPECIAL WORKSPACE</div>
+        <button className={'nav ' + (active?.name === 'PAN Master Hub' ? 'sel' : '')} onClick={() => { tool({ name: 'PAN Master Hub', cat: 'Special Tools' }); SMob(false); }}>
+          <Wrench />
+          <span>PAN Master Hub</span>
+          <ChevronRight />
+        </button>
+
+        <hr />
+
         <div className="label">PERSONALIZE</div>
 
         <label className="side-field">Font
