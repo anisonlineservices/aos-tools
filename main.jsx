@@ -380,7 +380,7 @@ function App() {
         <button style={{ background: panTab === 'portals' ? 'var(--brand)' : 'var(--card)', color: panTab === 'portals' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('portals')}>Official Portals</button>
       </div>
 
-      {/* 1. Passport Photo Resizer Tab (Fixed Extra Border Issue) */}
+      {/* 1. Passport Photo Resizer Tab (Border-free Cover Fit Crop Logic) */}
       {panTab === 'photo' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>📷 Passport Size Photo Resizer (Exact Portal Standards)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
@@ -413,7 +413,7 @@ function App() {
               c.width = w; c.height = h;
               const ctx = c.getContext('2d');
               
-              // Direct fill without extra borders (Cover fit crop logic)
+              // Cover-fit crop logic to completely avoid any white border/padding
               const imRatio = im.naturalWidth / im.naturalHeight;
               const targetRatio = w / h;
               let sw, sh, sx, sy;
@@ -510,7 +510,7 @@ function App() {
         </div>}
       </div>}
 
-      {/* 3. PDF Compressor (<300KB Strict Fix) Tab */}
+      {/* 3. PDF Compressor (<300KB) Tab */}
       {panTab === 'pdf' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>📑 Official Supporting Document PDF Compressor (&lt;300KB Strict)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Upload any scanned document or image/PDF. This tool strictly compresses the file into a lightweight PDF under 300 KB.</p>
@@ -519,7 +519,7 @@ function App() {
           try {
             if (!file) return;
             const pdfDoc = await PDFDocument.create();
-            const page = pdfDoc.addPage([595, 842]); // A4 size
+            const page = pdfDoc.addPage([595, 842]);
 
             const u = URL.createObjectURL(file);
             const img = new Image();
@@ -529,7 +529,6 @@ function App() {
               img.src = u;
             });
 
-            // Aggressive downscaling for guaranteed <300KB size
             const maxW = 800;
             let w = img.naturalWidth, h = img.naturalHeight;
             if (w > maxW) {
@@ -543,7 +542,6 @@ function App() {
             ctx.fillRect(0, 0, w, h);
             ctx.drawImage(img, 0, 0, w, h);
 
-            // Low quality factor (0.25) to guarantee <300KB
             const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.25);
             const resBlob = dataBlob(compressedDataUrl);
             const imgBytes = await resBlob.arrayBuffer();
