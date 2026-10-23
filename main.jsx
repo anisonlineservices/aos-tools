@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ExternalLink } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -116,7 +116,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప్యత",
+    privacyMinded: "గోప्यత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -441,7 +441,7 @@ function App() {
           const dataUrl = await blobToDataUrl(content);
           SPreviewDataUrl(dataUrl);
           SPreviewType('zip');
-          SM(`Generated ZIP containing ${totalPages} pages ready for download.`);
+          SM(`Generated ZIP containing ${totalPages} pages ready for preview & download.`);
         } else {
           dl(content, 'aos-split-pages.zip');
           SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
@@ -480,7 +480,7 @@ function App() {
           const dataUrl = await blobToDataUrl(blob);
           SPreviewDataUrl(dataUrl);
           SPreviewType('pdf');
-          SM(`Extracted ${pagesToExtract.length} pages successfully. Ready to download!`);
+          SM(`Extracted ${pagesToExtract.length} pages successfully. Ready for preview!`);
         } else {
           dl(blob, 'aos-split-range.pdf');
           SM(`Successfully extracted ${pagesToExtract.length} pages into a new PDF.`);
@@ -536,13 +536,13 @@ function App() {
 
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <button disabled={!file} onClick={() => splitPdfAction(false)}>Split & Download</button>
-        <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Prepare File</button>
+        <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Preview Result</button>
       </div>
 
       {previewDataUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
-        <b>✅ Processed File Ready</b>
-        <p style={{ fontSize: '12px', color: 'var(--muted)' }}>Your split file has been generated successfully and is ready to download.</p>
-        <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File Now</button>
+        <b>👀 Output Preview Ready</b>
+        <p style={{ fontSize: '12px', color: 'var(--muted)' }}>{previewType === 'pdf' ? 'Extracted pages PDF generated successfully.' : 'ZIP archive generated with all split pages successfully.'}</p>
+        <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File</button>
       </div>}
     </div>;
 
@@ -615,7 +615,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -917,7 +917,7 @@ function App() {
     </div>
 
     <footer>
-      <span>© {new Date://getFullYear()} {t.footerText}</span>
+      <span>© {new Date().getFullYear()} {t.footerText}</span>
       <button onClick={() => {
         SD(false);
         SA('#052f52');
