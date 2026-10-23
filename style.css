@@ -82,6 +82,7 @@ header {
   font-weight: 700;
   border-radius: 8px;
   font-size: 18px;
+  overflow: hidden;
 }
 
 .brand span {
