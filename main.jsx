@@ -116,7 +116,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప्यత",
+    privacyMinded: "గోప్యత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -310,15 +310,37 @@ function App() {
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
-  // Split PDF States & Preview State
-  const [splitMode, SSplitMode] = useState('all');
-  const [splitRange, SSplitRange] = useState('');
-  const [previewDataUrl, SPreviewDataUrl] = useState('');
-  const [previewType, SPreviewType] = useState('');
+  // Split PDF Persistent States (Saved in localStorage like PAN Master Hub)
+  const [splitMode, SSplitMode] = useState(() => localStorage.getItem('aos-split-mode-v1') || 'all');
+  const [splitRange, SSplitRange] = useState(() => localStorage.getItem('aos-split-range-v1') || '');
+  const [previewDataUrl, SPreviewDataUrl] = useState(() => localStorage.getItem('aos-split-preview-v1') || '');
+  const [previewType, SPreviewType] = useState(() => localStorage.getItem('aos-split-type-v1') || '');
 
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
   const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
+
+  useEffect(() => {
+    try { localStorage.setItem('aos-split-mode-v1', splitMode); } catch {}
+  }, [splitMode]);
+
+  useEffect(() => {
+    try { localStorage.setItem('aos-split-range-v1', splitRange); } catch {}
+  }, [splitRange]);
+
+  useEffect(() => {
+    try {
+      if (previewDataUrl) localStorage.setItem('aos-split-preview-v1', previewDataUrl);
+      else localStorage.removeItem('aos-split-preview-v1');
+    } catch {}
+  }, [previewDataUrl]);
+
+  useEffect(() => {
+    try {
+      if (previewType) localStorage.setItem('aos-split-type-v1', previewType);
+      else localStorage.removeItem('aos-split-type-v1');
+    } catch {}
+  }, [previewType]);
 
   useEffect(() => {
     try { localStorage.setItem('aos-pan-tab-v1', panTab); } catch {}
@@ -501,7 +523,6 @@ function App() {
     SM('');
     SFile(null);
     SFiles([]);
-    SPreviewDataUrl('');
     window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
@@ -519,7 +540,7 @@ function App() {
       <p><b>Split PDF File Locally</b></p>
       <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract individual pages or specific page ranges from your PDF securely in your browser.</p>
       
-      <input type="file" accept=".pdf,application/pdf" onChange={e => { SFile(e.target.files?.[0]); SPreviewDataUrl(''); }} />
+      <input type="file" accept=".pdf,application/pdf" onChange={e => SFile(e.target.files?.[0])} />
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
@@ -542,7 +563,10 @@ function App() {
       {previewDataUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
         <b>👀 Output Preview Ready</b>
         <p style={{ fontSize: '12px', color: 'var(--muted)' }}>{previewType === 'pdf' ? 'Extracted pages PDF generated successfully.' : 'ZIP archive generated with all split pages successfully.'}</p>
-        <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File</button>
+          <button style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => { SPreviewDataUrl(''); SPreviewType(''); localStorage.removeItem('aos-split-preview-v1'); localStorage.removeItem('aos-split-type-v1'); }}>Clear Preview</button>
+        </div>
       </div>}
     </div>;
 
@@ -615,7 +639,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
