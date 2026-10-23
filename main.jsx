@@ -673,15 +673,15 @@ function App() {
           </select>
         </label>
 
-        <div className="side-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div className="side-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
           <span>{t.accentColour}</span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <input type="color" value={accent} onChange={e => SA(e.target.value)} style={{ flex: 1, height: '36px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px' }} />
-            <button style={{ padding: '6px 10px', fontSize: '11px', fontWeight: '600', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }} onClick={() => SA('#052f52')}>Default</button>
+            <button style={{ padding: '6px 12px', fontSize: '11px', fontWeight: '600', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }} onClick={() => SA('#052f52')}>Default</button>
           </div>
         </div>
 
-        <div className="privacy">
+        <div className="privacy" style={{ marginTop: '14px' }}>
           <LockKeyhole />
           <span><b>{t.privacyMinded}</b><small>{t.localToolsNote}</small></span>
         </div>
