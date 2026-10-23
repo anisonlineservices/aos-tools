@@ -138,7 +138,7 @@ const translations = {
     localToolsNote: "टूल्स लोकल डिवाईसवर चालतात.",
     footerText: "AOS Tools · फ्री-फर्स्ट",
     resetAppearance: "रीसेट करा",
-    readyInWorkspace: "वर्कस्पेसमध्ये तयार आहे"
+    readyInWorkspace: "वर्कस्पेसमध्ये तयार है"
   }
 };
 
@@ -267,7 +267,6 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
-  // Initialize active tool from LocalStorage
   const [active, ST] = useState(() => {
     try {
       const savedTool = localStorage.getItem('aos-active-tool-v1');
@@ -283,12 +282,10 @@ function App() {
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
-  // PAN Master Hub Persistent States from LocalStorage
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
   const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
 
-  // Save PAN Hub states to LocalStorage
   useEffect(() => {
     try { localStorage.setItem('aos-pan-tab-v1', panTab); } catch {}
   }, [panTab]);
@@ -304,7 +301,6 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Bulletproof Browser History & Back Button Trap Fix
   useEffect(() => {
     window.history.pushState({ page: 'home' }, '');
 
@@ -403,7 +399,6 @@ function App() {
     if (n === 'PAN Master Hub') return <div className="form" style={{ gap: '16px' }}>
       <p><b>Anis Online Services — Professional PAN Master Hub & Resizer</b></p>
       
-      {/* PAN Hub Sub-Tabs */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
         <button style={{ background: panTab === 'photo' ? 'var(--brand)' : 'var(--card)', color: panTab === 'photo' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('photo')}>Passport Photo Resizer</button>
         <button style={{ background: panTab === 'signature' ? 'var(--brand)' : 'var(--card)', color: panTab === 'signature' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('signature')}>Signature Resizer</button>
@@ -411,7 +406,6 @@ function App() {
         <button style={{ background: panTab === 'portals' ? 'var(--brand)' : 'var(--card)', color: panTab === 'portals' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('portals')}>Official Portals</button>
       </div>
 
-      {/* 1. Passport Photo Resizer Tab */}
       {panTab === 'photo' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>📷 Passport Size Photo Resizer (Exact Portal Standards)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
@@ -485,7 +479,6 @@ function App() {
         </div>}
       </div>}
 
-      {/* 2. Signature Resizer Tab */}
       {panTab === 'signature' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>✍️ Signature Resizer (Exact Portal Standards)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
@@ -545,7 +538,6 @@ function App() {
         </div>}
       </div>}
 
-      {/* 3. PDF Compressor (<300KB) Tab */}
       {panTab === 'pdf' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>📑 Official Supporting Document PDF Compressor (&lt;300KB Strict)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Upload any scanned document or image/PDF. This tool strictly compresses the file into a lightweight PDF under 300 KB.</p>
@@ -595,7 +587,6 @@ function App() {
         }}>Compress PDF & Download (&lt;300KB)</button>
       </div>}
 
-      {/* 4. Official Portals Tab */}
       {panTab === 'portals' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>🔗 Direct Official Portals & Services</b>
         <div className="portal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
@@ -621,7 +612,9 @@ function App() {
       <button className="hamb" onClick={() => SMob(!mobile)}>{mobile ? <X /> : <Menu />}</button>
 
       <button className="brand" onClick={() => { ST(null); SC('All Tools'); localStorage.removeItem('aos-active-tool-v1'); }}>
-        <span className="logo">A</span>
+        <span className="logo">
+          <img src="https://i.ibb.co/680YwJ0/20510.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+        </span>
         <span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
       </button>
 
