@@ -59,12 +59,13 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
+  gap: 16px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: none;
   border: none;
   cursor: pointer;
@@ -82,7 +83,6 @@ header {
   font-weight: 700;
   border-radius: 8px;
   font-size: 18px;
-  overflow: hidden;
 }
 
 .brand span {
@@ -586,8 +586,8 @@ footer {
 }
 
 footer button {
-  background: none;
-  border: none;
+  background: None;
+  border: None;
   color: var(--muted);
   cursor: pointer;
   display: flex;
