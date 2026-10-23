@@ -76,7 +76,7 @@ header {
   width: 36px;
   height: 36px;
   background: var(--brand);
-  color: #ffffff;
+  color: #ffffff !important;
   display: flex;
   align-items: center;
   justify-content: center;
