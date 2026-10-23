@@ -310,7 +310,7 @@ function App() {
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
-  // Split PDF Persistent States (Saved in localStorage like PAN Master Hub)
+  // Split PDF Persistent States
   const [splitMode, SSplitMode] = useState(() => localStorage.getItem('aos-split-mode-v1') || 'all');
   const [splitRange, SSplitRange] = useState(() => localStorage.getItem('aos-split-range-v1') || '');
   const [previewDataUrl, SPreviewDataUrl] = useState(() => localStorage.getItem('aos-split-preview-v1') || '');
@@ -469,7 +469,7 @@ function App() {
           SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
         }
       } else if (splitMode === 'range') {
-        if (!splitRange.trim()) { SM('Please enter a valid page range (e.g. 1-3 or 2,4,5).'); return; }
+        if (!splitRange.trim()) { SM('Please enter a valid page range (e.g. 1-7 or 2,4,5).'); return; }
         const subPdf = await PDFDocument.create();
         const pagesToExtract = [];
         
@@ -552,7 +552,10 @@ function App() {
         <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
           <input type="radio" name="splitMode" checked={splitMode === 'range'} onChange={() => SSplitMode('range')} /> Extract custom page range
         </label>
-        {splitMode === 'range' && <input type="text" placeholder="e.g. 1-3, 5, 7-10" value={splitRange} onChange={e => SSplitRange(e.target.value)} style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: '8px', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }} />}
+        {splitMode === 'range' && <>
+          <input type="text" placeholder="e.g. 1-7 or 1,3,5" value={splitRange} onChange={e => SSplitRange(e.target.value)} style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: '8px', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }} />
+          <small style={{ color: 'var(--muted)', fontSize: '10px' }}>Tip: Use <b>1-7</b> to extract from page 1 to 7.</small>
+        </>}
       </div>
 
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
