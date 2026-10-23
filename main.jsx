@@ -138,7 +138,7 @@ const translations = {
     localToolsNote: "टूल्स लोकल डिवाईसवर चालतात.",
     footerText: "AOS Tools · फ्री-फर्स्ट",
     resetAppearance: "रीसेट करा",
-    readyInWorkspace: "वर्कस्पेसमध्ये तयार है"
+    readyInWorkspace: "वर्कस्पेसमध्ये तयार आहे"
   }
 };
 
@@ -283,20 +283,33 @@ function App() {
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
-  // PAN Master Hub Specific States
-  const [panTab, SPanTab] = useState('photo'); // 'photo' | 'signature' | 'pdf' | 'portals'
-  const [panPreview, SPanPreview] = useState('');
-  const [panFileObj, SPanFileObj] = useState(null);
-  const [panPortal, SPanPortal] = useState('NSDL');
+  // PAN Master Hub Persistent States from LocalStorage
+  const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
+  const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
+  const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
+
+  // Save PAN Hub states to LocalStorage
+  useEffect(() => {
+    try { localStorage.setItem('aos-pan-tab-v1', panTab); } catch {}
+  }, [panTab]);
+
+  useEffect(() => {
+    try {
+      if (panPreview) localStorage.setItem('aos-pan-preview-v1', panPreview);
+      else localStorage.removeItem('aos-pan-preview-v1');
+    } catch {}
+  }, [panPreview]);
+
+  useEffect(() => {
+    try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
+  }, [panPortal]);
 
   // Bulletproof Browser History & Back Button Trap Fix
   useEffect(() => {
-    // Push a dummy history state on initial load so back button has something to pop safely
     window.history.pushState({ page: 'home' }, '');
 
     const handlePopState = (e) => {
       if (active) {
-        // If a tool is open, intercept back button and close the tool instead of closing the browser tab
         ST(null);
         localStorage.removeItem('aos-active-tool-v1');
         window.history.pushState({ page: 'home' }, '');
@@ -374,8 +387,6 @@ function App() {
     SM('');
     SFile(null);
     SFiles([]);
-    SPanPreview('');
-    SPanFileObj(null);
     window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
@@ -415,9 +426,12 @@ function App() {
         <input type="file" accept="image/*" onChange={e => {
           const f = e.target.files?.[0];
           if (f) {
-            SPanFileObj(f);
-            const u = URL.createObjectURL(f);
-            SPanPreview(u);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const resUrl = event.target.result;
+              SPanPreview(resUrl);
+            };
+            reader.readAsDataURL(f);
           }
         }} />
         {panPreview && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', background: 'var(--soft)', padding: '12px', borderRadius: '8px' }}>
@@ -486,9 +500,11 @@ function App() {
         <input type="file" accept="image/*" onChange={e => {
           const f = e.target.files?.[0];
           if (f) {
-            SPanFileObj(f);
-            const u = URL.createObjectURL(f);
-            SPanPreview(u);
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              SPanPreview(event.target.result);
+            };
+            reader.readAsDataURL(f);
           }
         }} />
         {panPreview && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', background: 'var(--soft)', padding: '12px', borderRadius: '8px' }}>
@@ -604,7 +620,7 @@ function App() {
     <header>
       <button className="hamb" onClick={() => SMob(!mobile)}>{mobile ? <X /> : <Menu />}</button>
 
-      <button className="brand" onClick={() => { ST(null); SC('All Tools'); }}>
+      <button className="brand" onClick={() => { ST(null); SC('All Tools'); localStorage.removeItem('aos-active-tool-v1'); }}>
         <span className="logo">A</span>
         <span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
       </button>
@@ -635,7 +651,7 @@ function App() {
       <aside className={mobile ? 'open' : ''}>
         <div className="label">{t.workspace}</div>
 
-        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); }}>
+        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); localStorage.removeItem('aos-active-tool-v1'); }}>
           {c === 'PDF Tools' ? <FileText /> : c === 'Image Tools' ? <ImageIcon /> : c === 'Video Tools' ? <Video /> : c === 'AI Tools' ? <Sparkles /> : <Wrench />}
           <span>{c}</span><ChevronRight />
         </button>)}
@@ -718,7 +734,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => ST(null)}>← All tools</button>
+          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }}>← All tools</button>
           <div className="tool-heading">
             <span className="tile"><Wrench /></span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
