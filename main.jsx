@@ -6,6 +6,142 @@ import QRCode from 'qrcode';
 import JSZip from 'jszip';
 import './style.css';
 
+// Language Dictionary for Instant Translation
+const translations = {
+  English: {
+    freeToolkit: "✦ FREE-FIRST TOOLKIT",
+    heroTitle1: "Free tools.",
+    heroTitle2: "One simple workspace.",
+    heroDesc: "PDF, image, video, AI and everyday utilities in one place.",
+    catalogModules: "catalog modules",
+    localProcessing: "Local file processing",
+    freeFirstSetup: "Free-first setup",
+    exploreTools: "Explore tools",
+    selectTool: "Select a tool to open it.",
+    searchPlaceholder: "Search tools...",
+    workspace: "WORKSPACE",
+    specialWorkspace: "SPECIAL WORKSPACE",
+    personalize: "PERSONALIZE",
+    font: "Font",
+    accentColour: "Accent colour",
+    privacyMinded: "Privacy-minded",
+    localToolsNote: "Tools process locally.",
+    footerText: "AOS Tools · Free-first",
+    resetAppearance: "Reset appearance",
+    readyInWorkspace: "Ready in your workspace"
+  },
+  Hindi: {
+    freeToolkit: "✦ निःशुल्क टूलकिट",
+    heroTitle1: "मुफ्त टूल्स।",
+    heroTitle2: "एक साधारण वर्कस्पेस।",
+    heroDesc: "पीडीएफ, इमेज, वीडियो, एआई और रोजमर्रा के टूल्स एक ही जगह पर।",
+    catalogModules: "कैटलॉग मॉड्यूल",
+    localProcessing: "लोकल फाइल प्रोसेसिंग",
+    freeFirstSetup: "फ्री-फर्स्ट सेटअप",
+    exploreTools: "टूल्स खोजें",
+    selectTool: "खोलने के लिए किसी टूल का चयन करें।",
+    searchPlaceholder: "टूल्स खोजें...",
+    workspace: "वर्कस्पेस",
+    specialWorkspace: "विशेष वर्कस्पेस",
+    personalize: "कस्टमाइज करें",
+    font: "फॉन्ट",
+    accentColour: "रंग (Accent)",
+    privacyMinded: "गोपनीयता सुरक्षित",
+    localToolsNote: "टूल्स आपके डिवाइस पर चलते हैं।",
+    footerText: "AOS टूल · फ्री-फर्स्ट",
+    resetAppearance: "रीसेट करें",
+    readyInWorkspace: "आपके वर्कस्पेस में तैयार है"
+  },
+  Hinglish: {
+    freeToolkit: "✦ FREE-FIRST TOOLKIT",
+    heroTitle1: "Free tools.",
+    heroTitle2: "Ek simple workspace.",
+    heroDesc: "PDF, image, video, AI aur sabhi utilities ek hi jagah par.",
+    catalogModules: "catalog modules",
+    localProcessing: "Local file processing",
+    freeFirstSetup: "Free-first setup",
+    exploreTools: "Tools explore karein",
+    selectTool: "Open karne ke liye tool select karein.",
+    searchPlaceholder: "Tools search karein...",
+    workspace: "WORKSPACE",
+    specialWorkspace: "SPECIAL WORKSPACE",
+    personalize: "PERSONALIZE",
+    font: "Font",
+    accentColour: "Accent colour",
+    privacyMinded: "Privacy-minded",
+    localToolsNote: "Tools locally process hote hain.",
+    footerText: "AOS Tools · Free-first",
+    resetAppearance: "Reset appearance",
+    readyInWorkspace: "Ready in your workspace"
+  },
+  Tamil: {
+    freeToolkit: "✦ இலவச கருவிகள் தொகுப்பு",
+    heroTitle1: "இலவச கருவிகள்.",
+    heroTitle2: "எளிய பணிமனை.",
+    heroDesc: "PDF, படம், வீடியோ, AI மற்றும் பல சேவைகள் ஒரே இடத்தில்.",
+    catalogModules: "தொகுதிகள்",
+    localProcessing: "உள்ளூர் கோப்பு செயலாக்கம்",
+    freeFirstSetup: "இலவச அமைப்பு",
+    exploreTools: "கருவிகளை ஆராயுங்கள்",
+    selectTool: "திறக்க ஒரு கருவியைத் தேர்ந்தெடுக்கவும்.",
+    searchPlaceholder: "கருவிகளைத் தேடு...",
+    workspace: "WORKSPACE",
+    specialWorkspace: "SPECIAL WORKSPACE",
+    personalize: "PERSONALIZE",
+    font: "எழுத்துரு (Font)",
+    accentColour: "நிறம்",
+    privacyMinded: "தனியுரிமை",
+    localToolsNote: "கோப்புகள் உங்கள் சாதனத்தில் செயலாக்கப்படும்.",
+    footerText: "AOS Tools · இலவசம்",
+    resetAppearance: "அமைப்புகளை மீட்டமை",
+    readyInWorkspace: "பயன்படுத்த தயார்"
+  },
+  Telugu: {
+    freeToolkit: "✦ ఉచిత టూల్‌కిట్",
+    heroTitle1: "ఉచిత సాధనాలు.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
+    heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
+    catalogModules: "మాడ్యూల్స్",
+    localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
+    freeFirstSetup: "ఉచిత సెటప్",
+    exploreTools: "సాధనాలను అన్వేషించండి",
+    selectTool: "తెరవడానికి ఒక సాధనాన్ని ఎంచుకోండి.",
+    searchPlaceholder: "సాధనాలను వెతకండి...",
+    workspace: "WORKSPACE",
+    specialWorkspace: "SPECIAL WORKSPACE",
+    personalize: "PERSONALIZE",
+    font: "ఫాంట్",
+    accentColour: "రంగు",
+    privacyMinded: "గోప్యత",
+    localToolsNode: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
+    footerText: "AOS టూల్స్",
+    resetAppearance: "రీసెట్ చేయండి",
+    readyInWorkspace: "సిద్ధంగా ఉంది"
+  },
+  Marathi: {
+    freeToolkit: "✦ मोफत साधनकिट",
+    heroTitle1: "मोफत टूल्स.",
+    heroTitle2: "एक साधे workspace.",
+    heroDesc: "PDF, इमेज, व्हिडिओ, AI आणि इतर टूल्स एकाच ठिकाणी.",
+    catalogModules: "मॉड्यूल्स",
+    localProcessing: "लोकल फाईल प्रक्रिया",
+    freeFirstSetup: "मोफत सेटअप",
+    exploreTools: "टूल्स तपासा",
+    selectTool: "उघडण्यासाठी टूल निवडा.",
+    searchPlaceholder: "टूल्स शोधा...",
+    workspace: "WORKSPACE",
+    specialWorkspace: "SPECIAL WORKSPACE",
+    personalize: "PERSONALIZE",
+    font: "फॉन्ट",
+    accentColour: "रंग",
+    privacyMinded: "गोपनीयता सुरक्षित",
+    localToolsNote: "टूल्स लोकल डिवाईसवर चालतात.",
+    footerText: "AOS Tools · फ्री-फर्स्ट",
+    resetAppearance: "रीसेट करा",
+    readyInWorkspace: "वर्कस्पेसमध्ये तयार आहे"
+  }
+};
+
 const CATALOG = {
   "pdf": ["Merge PDF", "Split PDF", "Compress PDF", "PDF to Word", "PDF to PowerPoint", "PDF to Excel", "Word to PDF", "PowerPoint to PDF", "Excel to PDF", "Edit PDF", "PDF to JPG", "JPG to PDF", "Sign PDF", "Watermark Remover", "Watermark Stamp", "Rotate PDF", "HTML to PDF", "Unlock PDF", "Protect PDF", "Organize PDF", "PDF to PDF/A", "Repair PDF", "Page numbers", "Scan to PDF", "OCR PDF", "Compare PDF", "Redact PDF", "PDF to Text", "Crop PDF", "PDF Forms", "AI Summarizer", "Translate PDF", "PDF to Markdown", "PDF to Text (alternate)", "Ebook to PDF", "PDF to Ebook", "EPUB to PDF", "PDF to MOBI", "AZW to PDF", "PDF to AZW3"],
   "imgs": ["Compress Image", "Compress JPG", "Compress JPEG", "Compress PNG", "Compress BMP", "Compress WEBP", "Image to JPG", "Image to PNG", "Image to JPEG", "Image to WEBP", "Image to BMP", "Crop Image", "Resize Image", "Rotate Image", "Crop Circle Image", "Image Merge", "Photo Signature Resize", "GIF Maker", "GIF to Images", "Image Quality Enhancer", "Passport Photo Sheet"],
@@ -130,7 +266,8 @@ function App() {
   const [font, SF] = useState(() => loadAppearance().font ?? 'Inter');
   const [accent, SA] = useState(() => loadAppearance().accent ?? '#052f52');
 
-  // Active tool state restored from localStorage to prevent refresh redirect
+  const t = translations[lang] || translations['English'];
+
   const [active, ST] = useState(() => {
     try {
       const savedTool = localStorage.getItem('aos-active-tool-v1');
@@ -202,7 +339,7 @@ function App() {
     } catch { }
   }, [dark, lang, font, accent]);
 
-  // Save active tool to prevent refresh redirect
+  // Save active tool
   useEffect(() => {
     try {
       if (active) {
@@ -218,6 +355,63 @@ function App() {
       localStorage.setItem('aos-khata-v1', JSON.stringify(entries));
     } catch { }
   }, [entries]);
+
+  useEffect(() => {
+    if (!clientId || user) return;
+
+    const checkGoogleLoaded = setInterval(() => {
+      const google = window.google?.accounts?.id;
+      const el = document.getElementById('google-button');
+
+      if (google && el) {
+        clearInterval(checkGoogleLoaded);
+        try {
+          google.initialize({
+            client_id: clientId,
+            callback: (r) => {
+              try {
+                if (!r?.credential) {
+                  SM('Google sign-in response was missing.');
+                  return;
+                }
+                const payload = r.credential.split('.')[1];
+                const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+                const p = JSON.parse(atob(base64));
+
+                const profile = {
+                  name: typeof p.name === 'string' ? p.name : '',
+                  email: typeof p.email === 'string' ? p.email : '',
+                  picture: typeof p.picture === 'string' ? p.picture : ''
+                };
+
+                if (!profile.name || !profile.email) {
+                  SM('Google profile details were incomplete.');
+                  return;
+                }
+
+                localStorage.setItem(GOOGLE_PROFILE_KEY, JSON.stringify(profile));
+                SU(profile);
+                SM('Signed in successfully.');
+              } catch {
+                SM('Unable to read Google sign-in response.');
+              }
+            }
+          });
+
+          el.replaceChildren();
+          google.renderButton(el, {
+            theme: dark ? 'filled_black' : 'outline',
+            size: 'medium',
+            shape: 'pill'
+          });
+        } catch (e) {
+          console.error('Google Sign-In error:', e);
+        }
+      }
+    }, 200);
+
+    return () => clearInterval(checkGoogleLoaded);
+  }, [clientId, dark, user]);
 
   const dl = (blob, name) => {
     const u = URL.createObjectURL(blob), a = document.createElement('a');
@@ -389,7 +583,7 @@ function App() {
 
       <div className="search">
         <Search />
-        <input value={query} placeholder="Search tools..." onChange={e => SQ(e.target.value)} />
+        <input value={query} placeholder={t.searchPlaceholder} onChange={e => SQ(e.target.value)} />
       </div>
 
       <div className="head-actions">
@@ -415,7 +609,7 @@ function App() {
 
     <div className="layout">
       <aside className={mobile ? 'open' : ''}>
-        <div className="label">WORKSPACE</div>
+        <div className="label">{t.workspace}</div>
 
         {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); }}>
           {c === 'PDF Tools' ? <FileText /> : c === 'Image Tools' ? <ImageIcon /> : c === 'Video Tools' ? <Video /> : c === 'AI Tools' ? <Sparkles /> : <Wrench />}
@@ -424,7 +618,7 @@ function App() {
 
         <hr />
 
-        <div className="label">SPECIAL WORKSPACE</div>
+        <div className="label">{t.specialWorkspace}</div>
         <button className={'nav ' + (active?.name === 'PAN Master Hub' ? 'sel' : '')} onClick={() => { tool({ name: 'PAN Master Hub', cat: 'Special Tools' }); SMob(false); }}>
           <Wrench />
           <span>PAN Master Hub</span>
@@ -433,21 +627,21 @@ function App() {
 
         <hr />
 
-        <div className="label">PERSONALIZE</div>
+        <div className="label">{t.personalize}</div>
 
-        <label className="side-field">Font
+        <label className="side-field">{t.font}
           <select value={font} onChange={e => SF(e.target.value)}>
             {['Inter', 'Roboto', 'Poppins', 'DM Sans', 'Manrope', 'Space Grotesk', 'Open Sans', 'Work Sans', 'Arial', 'Georgia'].map(f => <option key={f}>{f}</option>)}
           </select>
         </label>
 
-        <label className="side-field">Accent colour
+        <label className="side-field">{t.accentColour}
           <input type="color" value={accent} onChange={e => SA(e.target.value)}/>
         </label>
 
         <div className="privacy">
           <LockKeyhole />
-          <span><b>Privacy-minded</b><small>Tools process locally.</small></span>
+          <span><b>{t.privacyMinded}</b><small>{t.localToolsNote}</small></span>
         </div>
 
         <small className="disclaimer">AOS Tools keeps tool workflows on this website.</small>
@@ -457,13 +651,13 @@ function App() {
         {!active ? <>
           <section className="hero">
             <div>
-              <div className="eyebrow">✦ FREE-FIRST TOOLKIT</div>
-              <h1>Free tools.<br /><span>One simple workspace.</span></h1>
-              <p>PDF, image, video, AI and everyday utilities in one place.</p>
+              <div className="eyebrow">{t.freeToolkit}</div>
+              <h1>{t.heroTitle1}<br /><span>{t.heroTitle2}</span></h1>
+              <p>{t.heroDesc}</p>
               <div className="stats">
-                <span><b>{items.length}+</b> catalog modules</span>
-                <span><b>Local</b> file processing</span>
-                <span><b>Free-first</b> setup</span>
+                <span><b>{items.length}+</b> {t.catalogModules}</span>
+                <span><b>Local</b> {t.localProcessing}</span>
+                <span><b>Free-first</b> {t.freeFirstSetup}</span>
               </div>
             </div>
             <div className="hero-graphic">
@@ -475,21 +669,21 @@ function App() {
 
           <div className="section-head">
             <div>
-              <h2>{cat === 'All Tools' ? 'Explore tools' : cat}</h2>
-              <p>{query ? `Results for "${query}"` : 'Select a tool to open it.'}</p>
+              <h2>{cat === 'All Tools' ? t.exploreTools : cat}</h2>
+              <p>{query ? `Results for "${query}"` : t.selectTool}</p>
             </div>
             <span>{shown.length} items</span>
           </div>
 
           <div className="grid">
-            {shown.map(t => <button key={t.cat + t.name} className="card" onClick={() => t.url ? window.open(t.url, '_blank', 'noopener,noreferrer') : tool(t)}>
-              <span className={'tile ' + t.cat.toLowerCase().split(' ')[0]}>
-                {t.cat === 'PDF Tools' ? <FileText /> : t.cat === 'Image Tools' ? <ImageIcon /> : t.cat === 'Video Tools' ? <Video /> : t.cat === 'AI Tools' ? <Sparkles /> : <Wrench />}
+            {shown.map(tItem => <button key={tItem.cat + tItem.name} className="card" onClick={() => tItem.url ? window.open(tItem.url, '_blank', 'noopener,noreferrer') : tool(tItem)}>
+              <span className={'tile ' + tItem.cat.toLowerCase().split(' ')[0]}>
+                {tItem.cat === 'PDF Tools' ? <FileText /> : tItem.cat === 'Image Tools' ? <ImageIcon /> : tItem.cat === 'Video Tools' ? <Video /> : tItem.cat === 'AI Tools' ? <Sparkles /> : <Wrench />}
               </span>
-              <b>{t.name}</b>
-              <p>{t.url ? 'Official portal · opens in a new tab' : 'Ready in your workspace'}</p>
+              <b>{tItem.name}</b>
+              <p>{tItem.url ? 'Official portal · opens in a new tab' : t.readyInWorkspace}</p>
               <span className="card-foot">
-                <em className="ready">{t.url ? 'Portal link' : 'Ready'}</em>
+                <em className="ready">{tItem.url ? 'Portal link' : 'Ready'}</em>
                 <ChevronRight size={15} />
               </span>
             </button>)}
@@ -507,13 +701,13 @@ function App() {
     </div>
 
     <footer>
-      <span>© {new Date().getFullYear()} AOS Tools · Free-first</span>
+      <span>© {new Date().getFullYear()} {t.footerText}</span>
       <button onClick={() => {
         SD(false);
         SA('#052f52');
         SF('Inter');
         SL('English');
-      }}> <RotateCcw size={14} /> Reset appearance</button>
+      }}> <RotateCcw size={14} /> {t.resetAppearance}</button>
     </footer>
   </div>;
 }
