@@ -321,7 +321,7 @@ function App() {
     [cat, query]
   );
 
-  // Apply Appearance & Font instantly
+  // Apply Appearance & Font instantly (Fixing global inheritance)
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = dark ? 'dark' : 'light';
@@ -330,6 +330,7 @@ function App() {
     const fonts = ['Inter', 'Roboto', 'Poppins', 'DM Sans', 'Manrope', 'Space Grotesk', 'Open Sans', 'Work Sans', 'Arial', 'Georgia'];
     const safeFont = fonts.includes(font) ? font : 'Inter';
     root.style.setProperty('--font', `"${safeFont}", system-ui, sans-serif`);
+    document.body.style.fontFamily = `"${safeFont}", system-ui, sans-serif`;
   }, [dark, accent, font]);
 
   // Save appearance settings
@@ -636,7 +637,7 @@ function App() {
               </span>
             </button>)}
           </div>
-        </> : <section className="workspace">
+        </> : <main className="workspace">
           <button className="back" onClick={() => ST(null)}>← All tools</button>
           <div className="tool-heading">
             <span className="tile"><Wrench /></span>
@@ -644,7 +645,7 @@ function App() {
           </div>
           {content()}
           {msg && <div className="message">{msg}</div>}
-        </section>}
+        </main>}
       </main>
     </div>
 
