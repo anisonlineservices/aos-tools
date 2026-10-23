@@ -288,6 +288,18 @@ function App() {
   const [panFileObj, SPanFileObj] = useState(null);
   const [panPortal, SPanPortal] = useState('NSDL');
 
+  // Handle Browser History & Back Button properly so it doesn't close the website
+  useEffect(() => {
+    const handlePopState = () => {
+      if (active) {
+        ST(null);
+        window.history.pushState({ activeTool: null }, '');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [active]);
+
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Video Tools', 'AI Tools', 'Special Tools', 'Advanced Features', 'Government Portals'];
@@ -321,6 +333,7 @@ function App() {
     try {
       if (active) {
         localStorage.setItem('aos-active-tool-v1', JSON.stringify(active));
+        window.history.pushState({ activeTool: active.name }, '');
       } else {
         localStorage.removeItem('aos-active-tool-v1');
       }
@@ -380,7 +393,7 @@ function App() {
         <button style={{ background: panTab === 'portals' ? 'var(--brand)' : 'var(--card)', color: panTab === 'portals' ? '#fff' : 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '600' }} onClick={() => SPanTab('portals')}>Official Portals</button>
       </div>
 
-      {/* 1. Passport Photo Resizer Tab (Border-free Cover Fit Crop Logic) */}
+      {/* 1. Passport Photo Resizer Tab */}
       {panTab === 'photo' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
         <b>📷 Passport Size Photo Resizer (Exact Portal Standards)</b>
         <p style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
@@ -413,7 +426,6 @@ function App() {
               c.width = w; c.height = h;
               const ctx = c.getContext('2d');
               
-              // Cover-fit crop logic to completely avoid any white border/padding
               const imRatio = im.naturalWidth / im.naturalHeight;
               const targetRatio = w / h;
               let sw, sh, sx, sy;
