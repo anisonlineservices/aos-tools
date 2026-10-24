@@ -116,7 +116,7 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
@@ -129,7 +129,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప్యత",
+    privacyMinded: "గోప्यత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -295,7 +295,7 @@ function getTileIcon(cat) {
   if (cat === 'Special Tools') return <Wrench />;
   if (cat === 'Advanced Features') return <Cpu />;
   if (cat === 'Government Portals') return <Globe />;
-  return 'wrench';
+  return <Wrench />;
 }
 
 function App() {
@@ -308,7 +308,7 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
-  // Initialize active tool from URL hash or fallback to localStorage
+  // Persistent Active Tool state synchronized with URL hash & localStorage
   const [active, ST] = useState(() => {
     try {
       const hash = window.location.hash.replace('#', '').trim();
@@ -376,15 +376,8 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Samsung Internet & Mobile Browser Back Button Interceptor via Hash Routing
+  // URL Hash Sync for Refresh Persistence
   useEffect(() => {
-    // Ensure an initial empty hash state so back button has a landing point
-    try {
-      if (!window.location.hash && !active) {
-        window.history.replaceState({ page: 'home' }, '', window.location.pathname + window.location.search);
-      }
-    } catch {}
-
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
       if (!hash) {
