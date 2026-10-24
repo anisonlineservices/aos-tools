@@ -116,7 +116,7 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
@@ -295,7 +295,7 @@ function getTileIcon(cat) {
   if (cat === 'Special Tools') return <Wrench />;
   if (cat === 'Advanced Features') return <Cpu />;
   if (cat === 'Government Portals') return <Globe />;
-  return <Wrench />;
+  return 'wrench';
 }
 
 function App() {
@@ -370,14 +370,8 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Robust History and Back Button Management to prevent site closing / stuck state
+  // Stable History management to prevent site closure on back button
   useEffect(() => {
-    if (active) {
-      window.history.pushState({ page: 'tool', name: active.name }, '');
-    } else {
-      window.history.replaceState({ page: 'home' }, '');
-    }
-
     const handlePopState = (e) => {
       if (active) {
         ST(null);
@@ -553,7 +547,9 @@ function App() {
     SM('');
     SFile(null);
     SMergeFiles([]);
-    window.history.pushState({ page: 'tool', name: tObj.name }, '');
+    try {
+      window.history.pushState({ page: 'tool', name: tObj.name }, '');
+    } catch {}
   }
 
   function content() {
@@ -694,7 +690,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -753,7 +749,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-signature-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Signature resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Signature resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -984,7 +980,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); window.history.pushState({ page: 'home' }, ''); }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
+          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
             <ArrowLeft size={14} /> All tools
           </button>
           <div className="tool-heading">
@@ -998,6 +994,7 @@ function App() {
     </div>
 
     <footer>
+      aside className={mobile ? 'open' : ''}
       <span>© {new Date().getFullYear()} {t.footerText}</span>
       <button onClick={() => {
         SD(false);
