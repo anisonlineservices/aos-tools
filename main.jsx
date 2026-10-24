@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ArrowLeft, Trash2 } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Wrench, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Clock, Eye, ArrowLeft, Trash2, Plus, CheckCircle, Globe, Cpu } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
-import QRCode from 'qrcode';
 import JSZip from 'jszip';
 import './style.css';
 
@@ -19,13 +18,12 @@ try {
   }
 } catch {}
 
-// Complete Language Dictionary for Instant UI Translation
 const translations = {
   English: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
     heroTitle1: "Free tools.",
     heroTitle2: "One simple workspace.",
-    heroDesc: "PDF, image, video, AI and everyday utilities in one place.",
+    heroDesc: "PDF, image, and everyday utilities in one place.",
     catalogModules: "catalog modules",
     localProcessing: "Local file processing",
     freeFirstSetup: "Free-first setup",
@@ -48,7 +46,7 @@ const translations = {
     freeToolkit: "✦ निःशुल्क टूलकिट",
     heroTitle1: "मुफ्त टूल्स।",
     heroTitle2: "एक साधारण वर्कस्पेस।",
-    heroDesc: "पीडीएफ, इमेज, वीडियो, एआई और रोजमर्रा के टूल्स एक ही जगह पर।",
+    heroDesc: "पीडीएफ, इमेज और रोजमर्रा के टूल्स एक ही जगह पर।",
     catalogModules: "कैटलॉग मॉड्यूल",
     localProcessing: "लोकल फाइल प्रोसेसिंग",
     freeFirstSetup: "फ्री-फर्स्ट सेटअप",
@@ -71,7 +69,7 @@ const translations = {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
     heroTitle1: "Free tools.",
     heroTitle2: "Ek simple workspace.",
-    heroDesc: "PDF, image, video, AI aur sabhi utilities ek hi jagah par.",
+    heroDesc: "PDF, image aur sabhi utilities ek hi jagah par.",
     catalogModules: "catalog modules",
     localProcessing: "Local file processing",
     freeFirstSetup: "Free-first setup",
@@ -94,7 +92,7 @@ const translations = {
     freeToolkit: "✦ இலவச கருவிகள் தொகுப்பு",
     heroTitle1: "இலவச கருவிகள்.",
     heroTitle2: "எளிய பணிமனை.",
-    heroDesc: "PDF, படம், வீடியோ, AI மற்றும் பல சேவைகள் ஒரே இடத்தில்.",
+    heroDesc: "PDF, படம் மற்றும் பல சேவைகள் ஒரே இடத்தில்.",
     catalogModules: "தொகுதிகள்",
     localProcessing: "உள்ளூர் கோப்பு செயலாக்கம்",
     freeFirstSetup: "இலவச அமைப்பு",
@@ -116,8 +114,8 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
-    heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
+    heroDesc: "PDF, ఇమేజ్ మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
     freeFirstSetup: "ఉచిత సెటప్",
@@ -129,7 +127,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప्यत",
+    privacyMinded: "గోప्यता",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -140,7 +138,7 @@ const translations = {
     freeToolkit: "✦ मोफत साधनकिट",
     heroTitle1: "मोफत टूल्स.",
     heroTitle2: "एक साधे workspace.",
-    heroDesc: "PDF, इमेज, व्हिडिओ, AI आणि इतर टूल्स एकाच ठिकाणी.",
+    heroDesc: "PDF, इमेज आणि इतर टूल्स एकाच ठिकाणी.",
     catalogModules: "मॉड्यूल्स",
     localProcessing: "लोकल फाईल प्रक्रिया",
     freeFirstSetup: "मोफत सेटअप",
@@ -162,15 +160,10 @@ const translations = {
 };
 
 const CATALOG = {
-  "pdf": ["Merge PDF", "Split PDF", "Compress PDF", "PDF to Word", "PDF to PowerPoint", "PDF to Excel", "Word to PDF", "PowerPoint to PDF", "Excel to PDF", "Edit PDF", "PDF to JPG", "JPG to PDF", "Sign PDF", "Watermark Remover", "Watermark Stamp", "Rotate PDF", "HTML to PDF", "Unlock PDF", "Protect PDF", "Organize PDF", "PDF to PDF/A", "Repair PDF", "Page numbers", "Scan to PDF", "OCR PDF", "Compare PDF", "Redact PDF", "PDF to Text", "Crop PDF", "PDF Forms", "AI Summarizer", "Translate PDF", "PDF to Markdown", "PDF to Text (alternate)", "Ebook to PDF", "PDF to Ebook", "EPUB to PDF", "PDF to MOBI", "AZW to PDF", "AZW to AZW3"],
-  "imgs": ["Compress Image", "Compress JPG", "Compress JPEG", "Compress PNG", "Compress BMP", "Compress WEBP", "Image to JPG", "Image to PNG", "Image to JPEG", "Image to WEBP", "Image to BMP", "Crop Image", "Resize Image", "Rotate Image", "Crop Circle Image", "Image Merge", "Photo Signature Resize", "GIF Maker", "GIF to Images", "Image Quality Enhancer", "Passport Photo Sheet"],
-  "special": ["Barcode Generator", "Password Generator", "Image to Color", "Color Extractor", "ZIP Extractor", "Real Client Ledger Diary (Khata)", "Age Calculator", "Image to URL / HTML", "HTML Editor", "QR Code Generator", "PAN Master Hub"]
+  "pdf": ["Merge PDF", "Split PDF", "Compress PDF", "Rotate PDF", "Unlock PDF", "Protect PDF", "Page numbers", "Watermark Stamp"],
+  "imgs": ["Compress Image", "Compress JPG", "Compress PNG", "Image to JPG", "Image to PNG", "Resize Image", "Rotate Image", "Passport Photo Sheet"],
+  "special": ["Barcode Generator", "Password Generator", "Age Calculator", "Color Picker", "Notepad", "QR Code Generator", "PAN Master Hub", "Ledger Diary", "ZIP Extractor"]
 };
-
-const extraSpecial = ['Text Case Converter', 'Word Counter', 'JSON Formatter / Validator', 'Unit Converter', 'GST Calculator', 'EMI Calculator', 'Percentage Calculator', 'Date Difference Calculator', 'Base64 Encoder / Decoder', 'URL Encoder / Decoder', 'UUID Generator', 'Lorem Ipsum Generator', 'Color Picker', 'Notepad', 'Text to Slug Converter'];
-const video = ['Video Compressor', 'Video Converter', 'Video to MP3', 'Video Trimmer', 'GIF Maker'];
-const ai = ['AI Text Tools', 'AI Image Tools', 'AI Summarizer', 'AI Translator', 'Background Remover'];
-const advanced = ['Google Drive Integration', 'Google Sign in / Sign up', 'User Dashboard', 'Batch File Processing', 'Drag and Drop', 'Search and Categories', 'Privacy and Security'];
 
 const portals = [
   ['PAN Apply / UTIITSL', 'https://www.pan.utiitsl.com/'],
@@ -226,8 +219,8 @@ const portals = [
 ].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
 
 function getToolStatus(cat, name) {
-  if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF' || name === 'Compress PDF' || name === 'PDF to Word')) return 'ready';
-  if (cat === 'Special Tools' && name === 'PAN Master Hub') return 'ready';
+  if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF' || name === 'Compress PDF')) return 'ready';
+  if (cat === 'Special Tools' && (name === 'PAN Master Hub' || name === 'Ledger Diary' || name === 'ZIP Extractor')) return 'ready';
   if (cat === 'Government Portals') return 'portal';
   return 'soon';
 }
@@ -237,10 +230,7 @@ const makeItems = (arr, cat) => arr.map(name => ({ name, cat, working: getToolSt
 const items = [
   ...makeItems(CATALOG.pdf, 'PDF Tools'),
   ...makeItems(CATALOG.imgs, 'Image Tools'),
-  ...makeItems([...CATALOG.special, ...extraSpecial], 'Special Tools'),
-  ...makeItems(video, 'Video Tools'),
-  ...makeItems(ai, 'AI Tools'),
-  ...makeItems(advanced, 'Advanced Features'),
+  ...makeItems(CATALOG.special, 'Special Tools'),
   ...portals
 ];
 
@@ -279,10 +269,7 @@ function loadGoogleProfile() {
 function getTileClass(cat) {
   if (cat === 'PDF Tools') return 'pdf';
   if (cat === 'Image Tools') return 'image';
-  if (cat === 'Video Tools') return 'video';
-  if (cat === 'AI Tools') return 'ai';
   if (cat === 'Special Tools') return 'special';
-  if (cat === 'Advanced Features') return 'advanced';
   if (cat === 'Government Portals') return 'portals';
   return 'wrench';
 }
@@ -290,10 +277,7 @@ function getTileClass(cat) {
 function getTileIcon(cat) {
   if (cat === 'PDF Tools') return <FileText />;
   if (cat === 'Image Tools') return <ImageIcon />;
-  if (cat === 'Video Tools') return <Video />;
-  if (cat === 'AI Tools') return <Sparkles />;
   if (cat === 'Special Tools') return <Wrench />;
-  if (cat === 'Advanced Features') return <Cpu />;
   if (cat === 'Government Portals') return <Globe />;
   return <Wrench />;
 }
@@ -308,7 +292,6 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
-  // Persistent Active Tool state synchronized with URL hash & localStorage
   const [active, ST] = useState(() => {
     try {
       const hash = window.location.hash.replace('#', '').trim();
@@ -335,20 +318,43 @@ function App() {
   const [compressedSize, SCompressedSize] = useState('');
   const [isCompressing, SIsCompressing] = useState(false);
 
-  // PDF to Word Specific States
-  const [wordBlob, SWordBlob] = useState(null);
-  const [isConvertingWord, SIsConvertingWord] = useState(false);
-
   // Split PDF Persistent States
   const [splitMode, SSplitMode] = useState(() => localStorage.getItem('aos-split-mode-v1') || 'all');
   const [splitRange, SSplitRange] = useState(() => localStorage.getItem('aos-split-range-v1') || '');
   const [previewDataUrl, SPreviewDataUrl] = useState(() => localStorage.getItem('aos-split-preview-v1') || '');
   const [previewType, SPreviewType] = useState(() => localStorage.getItem('aos-split-type-v1') || '');
 
-  // PAN Master Hub States (Untouched & Fully Persistent)
+  // PAN Master Hub States (Locked & Protected)
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
   const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
+
+  // Ledger Diary States
+  const [ledgerEntries, SLedgerEntries] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('aos-ledger-entries-v1') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [ledgerForm, SLedgerForm] = useState({
+    date: localDate(),
+    name: '',
+    services: '',
+    tokenNum: '',
+    government: '',
+    workCharge: '',
+    totalPrice: '',
+    status: 'Pending'
+  });
+
+  // ZIP Extractor States
+  const [zipFiles, SZipFiles] = useState([]);
+  const [isExtractingZip, SIsExtractingZip] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem('aos-ledger-entries-v1', JSON.stringify(ledgerEntries)); } catch {}
+  }, [ledgerEntries]);
 
   useEffect(() => {
     try { localStorage.setItem('aos-split-mode-v1', splitMode); } catch {}
@@ -387,7 +393,6 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // URL Hash Sync for Refresh Persistence
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
@@ -407,7 +412,7 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Video Tools', 'AI Tools', 'Special Tools', 'Advanced Features', 'Government Portals'];
+  const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Special Tools', 'Government Portals'];
 
   const shown = useMemo(
     () => items.filter(x => {
@@ -482,86 +487,6 @@ function App() {
     SMergeFiles(mergeFiles.filter((_, i) => i !== index));
   };
 
-  const blobToDataUrl = (blob) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  async function splitPdfAction(shouldPreview = false) {
-    try {
-      if (!file) { SM('Please select a PDF file first.'); return; }
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
-      const totalPages = pdfDoc.getPageCount();
-
-      if (splitMode === 'all') {
-        const zip = new JSZip();
-        for (let i = 0; i < totalPages; i++) {
-          const subPdf = await PDFDocument.create();
-          const [copiedPage] = await subPdf.copyPages(pdfDoc, [i]);
-          subPdf.addPage(copiedPage);
-          const pdfBytes = await subPdf.save();
-          zip.file(`page_${i + 1}.pdf`, pdfBytes);
-        }
-        const content = await zip.generateAsync({ type: 'blob' });
-        if (shouldPreview) {
-          const dataUrl = await blobToDataUrl(content);
-          SPreviewDataUrl(dataUrl);
-          SPreviewType('zip');
-          SM(`Generated ZIP containing ${totalPages} pages ready for preview & download.`);
-        } else {
-          dl(content, 'aos-split-pages.zip');
-          SM(`Successfully split PDF into ${totalPages} individual pages and downloaded as ZIP.`);
-        }
-      } else if (splitMode === 'range') {
-        if (!splitRange.trim()) { SM('Please enter a valid page range (e.g. 1-7 or 2,4,5).'); return; }
-        const subPdf = await PDFDocument.create();
-        const pagesToExtract = [];
-        
-        const parts = splitRange.split(',');
-        for (const part of parts) {
-          if (part.includes('-')) {
-            const [start, end] = part.split('-').map(n => parseInt(n.trim(), 10));
-            if (!isNaN(start) && !isNaN(end)) {
-              for (let p = start; p <= end; p++) {
-                if (p >= 1 && p <= totalPages) pagesToExtract.push(p - 1);
-              }
-            }
-          } else {
-            const p = parseInt(part.trim(), 10);
-            if (!isNaN(p) && p >= 1 && p <= totalPages) pagesToExtract.push(p - 1);
-          }
-        }
-
-        if (pagesToExtract.length ===.0) {
-          SM('Invalid page range specified based on total pages.');
-          return;
-        }
-
-        const copiedPages = await subPdf.copyPages(pdfDoc, pagesToExtract);
-        copiedPages.forEach(pg => subPdf.addPage(pg));
-        const pdfBytes = await subPdf.save();
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-
-        if (shouldPreview) {
-          const dataUrl = await blobToDataUrl(blob);
-          SPreviewDataUrl(dataUrl);
-          SPreviewType('pdf');
-          SM(`Extracted ${pagesToExtract.length} pages successfully. Ready for preview!`);
-        } else {
-          dl(blob, 'aos-split-range.pdf');
-          SM(`Successfully extracted ${pagesToExtract.length} pages into a new PDF.`);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      SM('Split failed. Ensure the PDF file is valid and not password protected.');
-    }
-  }
-
   async function compressPdfAction() {
     try {
       if (!file) { SM('Please select a PDF file first.'); return; }
@@ -594,47 +519,28 @@ function App() {
     }
   }
 
-  async function pdfToWordAction() {
+  async function handleZipExtract(zipFile) {
     try {
-      if (!file) { SM('Please select a PDF file first.'); return; }
-      SIsConvertingWord(true);
-      SM('Extracting real text from PDF...');
-
-      const arrayBuffer = await file.arrayBuffer();
-      // Using pdf-lib object inspection & raw stream text fallback decoding for real local extraction
-      const uint8Array = new Uint8Array(arrayBuffer);
-      let extractedText = `=== Extracted Text from ${file.name} ===\n\n`;
+      if (!zipFile) return;
+      SIsExtractingZip(true);
+      SM('Extracting ZIP contents...');
+      const zip = new JSZip();
+      const loadedZip = await zip.loadAsync(zipFile);
+      const fileList = [];
       
-      // Basic clean text extraction by filtering printable ASCII/Unicode characters from PDF streams
-      let chunkText = "";
-      for (let i = 0; i < uint8Array.length; i++) {
-        const char = uint8Array[i];
-        if ((char >= 32 && char <= 126) || char === 10 || char === 13) {
-          chunkText += String.fromCharCode(char);
-        } else {
-          if (chunkText.length > 4) {
-            extractedText += chunkText + " ";
-          }
-          chunkText = "";
+      for (const [filename, zipEntry] of Object.entries(loadedZip.files)) {
+        if (!zipEntry.dir) {
+          const blob = await zipEntry.async('blob');
+          fileList.push({ name: filename, size: blob.size, blob });
         }
       }
-      if (chunkText.length > 4) {
-        extractedText += chunkText;
-      }
-
-      // Fallback message if raw stream text is minimal
-      if (extractedText.length < 50) {
-        extractedText = `=== Document: ${file.name} ===\n[Note: This PDF might contain scanned images. Local text parser processed successfully via AOS Tools.]`;
-      }
-
-      const blob = new Blob([extractedText], { type: 'text/plain;charset=utf-8' });
-      SWordBlob(blob);
-      SIsConvertingWord(false);
-      SM('PDF text extracted successfully!');
+      SZipFiles(fileList);
+      SIsExtractingZip(false);
+      SM(`Successfully extracted ${fileList.length} files from ZIP!`);
     } catch (err) {
       console.error(err);
-      SIsConvertingWord(false);
-      SM('Extraction failed. Ensure PDF is valid.');
+      SIsExtractingZip(false);
+      SM('Failed to extract ZIP. Ensure it is a valid archive.');
     }
   }
 
@@ -649,7 +555,7 @@ function App() {
     SMergeFiles([]);
     SCompressedBlob(null);
     SCompressedSize('');
-    SWordBlob(null);
+    SZipFiles([]);
     try {
       window.location.hash = tObj.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
     } catch {}
@@ -703,52 +609,6 @@ function App() {
       </div>
     </div>;
 
-    if (n === 'Split PDF') return <div className="form" style={{ gap: '14px' }}>
-      <p><b>Split PDF File Locally</b></p>
-      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract individual pages or specific page ranges from your PDF securely in your browser.</p>
-      
-      <input type="file" accept=".pdf,application/pdf" onChange={e => SFile(e.target.files?.[0])} />
-
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-          <input type="radio" name="splitMode" checked={splitMode === 'all'} onChange={() => SSplitMode('all')} /> Extract every page into separate PDFs (ZIP)
-        </label>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <label style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-          <input type="radio" name="splitMode" checked={splitMode === 'range'} onChange={() => SSplitMode('range')} /> Extract custom page range
-        </label>
-        {splitMode === 'range' && <>
-          <input type="text" placeholder="e.g. 1-7 or 1,3,5" value={splitRange} onChange={e => SSplitRange(e.target.value)} style={{ background: 'var(--card)', border: '1px solid var(--line)', padding: '8px', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }} />
-          <small style={{ color: 'var(--muted)', fontSize: '10px' }}>Tip: Use <b>1-7</b> to extract from page 1 to 7.</small>
-        </>}
-      </div>
-
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        <button disabled={!file} onClick={() => splitPdfAction(false)}>Split & Download</button>
-        <button disabled={!file} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => splitPdfAction(true)}><Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> Preview</button>
-      </div>
-
-      {previewDataUrl && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'var(--card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '10px' }}>
-        <b>👀 Output Preview Ready</b>
-        <p style={{ fontSize: '12px', color: 'var(--muted)' }}>{previewType === 'pdf' ? 'Extracted pages PDF generated successfully.' : 'ZIP archive generated with all split pages successfully.'}</p>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File</button>
-          <button style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => { SPreviewDataUrl(''); SPreviewType(''); localStorage.removeItem('aos-split-preview-v1'); localStorage.removeItem('aos-split-type-v1'); }}>Clear</button>
-        </div>
-      </div>}
-
-      <div style={{ background: 'var(--card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '8px', fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
-        <b>💡 Quick Guide:</b>
-        <ol style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
-          <li>Select your source PDF file.</li>
-          <li>Choose to extract all pages into a ZIP or specify a custom range (e.g., <b>1-3, 5</b>).</li>
-          <li>Click <b>Split & Download</b> to get your files instantly.</li>
-        </ol>
-      </div>
-    </div>;
-
     if (n === 'Compress PDF') return <div className="form" style={{ gap: '16px' }}>
       <p><b>Compress PDF File (Adjustable Quality)</b></p>
       <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Reduce your PDF file size locally in your browser with custom quality levels.</p>
@@ -795,48 +655,122 @@ function App() {
         <b>💡 Quick Guide:</b>
         <ol style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
           <li>Select your heavy PDF file.</li>
-          <li>Adjust the <b>Quality Level</b> slider as needed (lower % = smaller file size).</li>
+          <li>Adjust the <b>Quality Level</b> slider as needed.</li>
           <li>Click <b>Compress</b> and download your optimized PDF.</li>
         </ol>
       </div>
     </div>;
 
-    if (n === 'PDF to Word') return <div className="form" style={{ gap: '16px' }}>
-      <p><b>PDF to Word / Text (.txt)</b></p>
-      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract real text content from your PDF document locally into an openable text file.</p>
+    if (n === 'Ledger Diary') return <div className="form" style={{ gap: '16px' }}>
+      <p><b>Real Client Ledger Diary (Khata)</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Manage daily client service entries, government fees, and payment statuses securely on your device.</p>
 
-      <input type="file" accept=".pdf,application/pdf" onChange={e => {
-        const f = e.target.files?.[0];
-        if (f) {
-          SFile(f);
-          SWordBlob(null);
-        }
-      }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', background: 'var(--card)', padding: '12px', borderRadius: '10px', border: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Date</label>
+          <input type="date" value={ledgerForm.date} onChange={e => SLedgerForm({ ...ledgerForm, date: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Client Name</label>
+          <input type="text" placeholder="Client Name" value={ledgerForm.name} onChange={e => SLedgerForm({ ...ledgerForm, name: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Services</label>
+          <input type="text" placeholder="e.g. PAN / Aadhaar" value={ledgerForm.services} onChange={e => SLedgerForm({ ...ledgerForm, services: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Token Num</label>
+          <input type="text" placeholder="Token / Ack No." value={ledgerForm.tokenNum} onChange={e => SLedgerForm({ ...ledgerForm, tokenNum: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Government Fee (₹)</label>
+          <input type="number" placeholder="0" value={ledgerForm.government} onChange={e => SLedgerForm({ ...ledgerForm, government: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Work Charge (₹)</label>
+          <input type="number" placeholder="0" value={ledgerForm.workCharge} onChange={e => SLedgerForm({ ...ledgerForm, workCharge: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Total Price (₹)</label>
+          <input type="number" placeholder="0" value={ledgerForm.totalPrice} onChange={e => SLedgerForm({ ...ledgerForm, totalPrice: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '11px' }}>Status</label>
+          <select value={ledgerForm.status} onChange={e => SLedgerForm({ ...ledgerForm, status: e.target.value })} style={{ padding: '6px', fontSize: '12px', background: 'var(--soft)', border: '1px solid var(--line)', borderRadius: '6px', color: 'var(--text)' }}>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+      </div>
 
-      {file && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card)', padding: '14px', borderRadius: '10px', border: '1px solid var(--line)' }}>
+      <button onClick={() => {
+        if (!ledgerForm.name.trim()) { SM('Please enter client name.'); return; }
+        const newEntry = { id: Date.now(), ...ledgerForm };
+        SLedgerEntries([newEntry, ...ledgerEntries]);
+        SLedgerForm({ date: localDate(), name: '', services: '', tokenNum: '', government: '', workCharge: '', totalPrice: '', status: 'Pending' });
+        SM('Client entry added successfully to Ledger!');
+      }}><Plus size={14} style={{ display: 'inline', marginRight: '4px' }} /> Add Entry to Khata</button>
+
+      {ledgerEntries.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto', border: '1px solid var(--line)', padding: '10px', borderRadius: '8px', background: 'var(--card)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>📄 {file.name}</span>
-          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
-          <button onClick={() => { SFile(null); SWordBlob(null); }} style={{ background: 'transparent', border: 'none', color: '#c62828', cursor: 'pointer' }}><Trash2 size={16} /></button>
+          <b>Saved Khata Entries ({ledgerEntries.length}):</b>
+          <button onClick={() => { if (window.confirm('Clear all ledger entries?')) SLedgerEntries([]); }} style={{ background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a', padding: '4px 8px', fontSize: '10px', borderRadius: '4px' }}>Clear All</button>
         </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button disabled={isConvertingWord} onClick={pdfToWordAction} style={{ flex: 1, padding: '8px 12px', fontSize: '12px' }}>{isConvertingWord ? 'Extracting...' : 'Extract Real Text'}</button>
-          <button onClick={() => { SFile(null); SWordBlob(null); }} style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)', padding: '8px 12px', fontSize: '12px' }}>Clear</button>
-        </div>
-
-        {wordBlob && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--soft)', padding: '10px', borderRadius: '8px', marginTop: '6px' }}>
-          <span style={{ fontSize: '12px', color: 'green', fontWeight: '600' }}>Real text extracted successfully!</span>
-          <button onClick={() => dl(wordBlob, file.name.replace(/\.[^/.]+$/, '') + '.txt')} style={{ padding: '8px 12px', fontSize: '12px' }}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download .txt</button>
-        </div>}
+        {ledgerEntries.map((item) => (
+          <div key={item.id} style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'var(--soft)', padding: '8px 10px', borderRadius: '6px', fontSize: '11px', border: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span><b>{item.name}</b> ({item.services || 'General'})</span>
+              <span style={{ color: item.status === 'Completed' ? 'green' : 'orange', fontWeight: '600' }}>{item.status}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)' }}>
+              <span>Date: {item.date} | Token: {item.tokenNum || 'N/A'}</span>
+              <span>Gov: ₹{item.government || 0} | Work: ₹{item.workCharge || 0} | <b>Total: ₹{item.totalPrice || 0}</b></span>
+            </div>
+            <button onClick={() => SLedgerEntries(ledgerEntries.filter(e => e.id !== item.id))} style={{ alignSelf: 'flex-end', background: 'transparent', border: 'none', color: '#c62828', cursor: 'pointer', fontSize: '10px' }}>Delete</button>
+          </div>
+        ))}
       </div>}
 
       <div style={{ background: 'var(--card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '8px', fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
         <b>💡 Quick Guide:</b>
         <ol style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
-          <li>Select your PDF document.</li>
-          <li>Click <b>Extract Real Text</b> to parse the document content.</li>
-          <li>Click <b>Download .txt</b> to save and view your extracted text instantly.</li>
+          <li>Fill in client details, fees, and status.</li>
+          <li>Click <b>Add Entry to Khata</b> to store locally.</li>
+          <li>View or clear past entries anytime securely.</li>
+        </ol>
+      </div>
+    </div>;
+
+    if (n === 'ZIP Extractor') return <div className="form" style={{ gap: '16px' }}>
+      <p><b>ZIP Extractor</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Upload any ZIP archive to view and extract its contained files directly in your browser.</p>
+
+      <input type="file" accept=".zip,application/zip" onChange={e => {
+        const f = e.target.files?.[0];
+        if (f) handleZipExtract(f);
+      }} />
+
+      {isExtractingZip && <p style={{ fontSize: '12px', color: 'var(--brand)' }}>Extracting archive contents...</p>}
+
+      {zipFiles.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', border: '1px solid var(--line)', padding: '10px', borderRadius: '8px', background: 'var(--card)' }}>
+        <b>Archive Files ({zipFiles.length}):</b>
+        {zipFiles.map((zf, idx) => (
+          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--soft)', padding: '6px 10px', borderRadius: '6px', fontSize: '11px' }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{zf.name}</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{ color: 'var(--muted)' }}>{Math.round(zf.size / 1024)} KB</span>
+              <button onClick={() => dl(zf.blob, zf.name)} style={{ padding: '4px 8px', fontSize: '10px' }}><Download size={12} style={{ display: 'inline', marginRight: '2px' }} /> Save</button>
+            </div>
+          </div>
+        ))}
+      </div>}
+
+      <div style={{ background: 'var(--card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--line)', marginTop: '8px', fontSize: '11px', color: 'var(--muted)', lineHeight: '1.5' }}>
+        <b>💡 Quick Guide:</b>
+        <ol style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
+          <li>Select your .zip file.</li>
+          <li>Browse the list of extracted files inside.</li>
+          <li>Click <b>Save</b> on any file to download it instantly.</li>
         </ol>
       </div>
     </div>;
@@ -867,8 +801,7 @@ function App() {
           if (f) {
             const reader = new FileReader();
             reader.onload = (event) => {
-              const resUrl = event.target.result;
-              SPanPreview(resUrl);
+              SPanPreview(event.target.result);
             };
             reader.readAsDataURL(f);
           }
@@ -1015,7 +948,7 @@ function App() {
             ctx.drawImage(img, 0, 0, w, h);
 
             const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.25);
-            const resBlob = dataBlob(compressedDataUrl);
+            const resBlob = blobFromUrl(compressedDataUrl);
             const imgBytes = await resBlob.arrayBuffer();
             const embedded = await pdfDoc.embedJpg(imgBytes);
 
@@ -1052,7 +985,7 @@ function App() {
     </div>;
   }
 
-  function dataBlobFromUrl(dataUrl) {
+  function blobFromUrl(dataUrl) {
     const arr = dataUrl.split(',');
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
@@ -1112,6 +1045,16 @@ function App() {
           <span>PAN Master Hub</span>
           <ChevronRight />
         </button>
+        <button className={'nav ' + (active?.name === 'Ledger Diary' ? 'sel' : '')} onClick={() => { tool({ name: 'Ledger Diary', cat: 'Special Tools', status: 'ready' }); SMob(false); }}>
+          <FileText />
+          <span>Ledger Diary</span>
+          <ChevronRight />
+        </button>
+        <button className={'nav ' + (active?.name === 'ZIP Extractor' ? 'sel' : '')} onClick={() => { tool({ name: 'ZIP Extractor', cat: 'Special Tools', status: 'ready' }); SMob(false); }}>
+          <Cpu />
+          <span>ZIP Extractor</span>
+          <ChevronRight />
+        </button>
 
         <hr />
 
@@ -1160,7 +1103,7 @@ function App() {
             <div className="hero-graphic">
               <div className="float"><FileText size={18} />PDF</div>
               <div className="float"><ImageIcon size={18} />IMAGE</div>
-              <div className="float"><Sparkles size={18} />AI</div>
+              <div className="float"><Wrench size={18} />TOOLS</div>
             </div>
           </section>
 
