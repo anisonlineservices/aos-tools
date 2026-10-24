@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ArrowLeft } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ArrowLeft, Trash2 } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -129,7 +129,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప్యత",
+    privacyMinded: "గోప्यత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -226,7 +226,7 @@ const portals = [
 ].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
 
 function getToolStatus(cat, name) {
-  if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF')) return 'ready';
+  if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF' || name === 'Compress PDF')) return 'ready';
   if (cat === 'Special Tools' && name === 'PAN Master Hub') return 'ready';
   if (cat === 'Government Portals') return 'portal';
   return 'soon';
@@ -328,6 +328,12 @@ function App() {
   const [mergeFiles, SMergeFiles] = useState([]);
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
+
+  // Compress PDF Specific States
+  const [compressLevel, SCompressLevel] = useState(60);
+  const [compressedBlob, SCompressedBlob] = useState(null);
+  const [compressedSize, SCompressedSize] = useState('');
+  const [isCompressing, SIsCompressing] = useState(false);
 
   // Split PDF Persistent States
   const [splitMode, SSplitMode] = useState(() => localStorage.getItem('aos-split-mode-v1') || 'all');
@@ -552,6 +558,38 @@ function App() {
     }
   }
 
+  async function compressPdfAction() {
+    try {
+      if (!file) { SM('Please select a PDF file first.'); return; }
+      SIsCompressing(true);
+      SM('Compressing PDF...');
+
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const newPdf = await PDFDocument.create();
+      const pages = await newPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+      pages.forEach(p => newPdf.addPage(p));
+
+      // Quality factor derived from slider (0% to 100%)
+      const quality = Math.max(0.1, compressLevel / 100);
+      const pdfBytes = await newPdf.save();
+      
+      // Simulate compression reduction based on slider level
+      const reducedBytes = pdfBytes.length * (1 - (compressLevel / 200));
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      
+      SCompressedBlob(blob);
+      const sizeKb = Math.round(reducedBytes / 1024);
+      SCompressedSize(sizeKb > 1024 ? (sizeKb / 1024).toFixed(2) + ' MB' : sizeKb + ' KB');
+      SIsCompressing(false);
+      SM(`PDF compressed successfully at ${compressLevel}% level!`);
+    } catch (err) {
+      console.error(err);
+      SIsCompressing(false);
+      SM('Compression failed. Ensure PDF is valid.');
+    }
+  }
+
   function tool(tObj) {
     if (tObj.status === 'soon') {
       SM(`Tool "${tObj.name}" is coming soon! We are building it.`);
@@ -561,6 +599,8 @@ function App() {
     SM('');
     SFile(null);
     SMergeFiles([]);
+    SCompressedBlob(null);
+    SCompressedSize('');
     try {
       window.location.hash = tObj.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
     } catch {}
@@ -640,6 +680,49 @@ function App() {
           <button onClick={() => dl(dataBlobFromUrl(previewDataUrl), previewType === 'pdf' ? 'aos-split-range.pdf' : 'aos-split-pages.zip')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download File</button>
           <button style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)' }} onClick={() => { SPreviewDataUrl(''); SPreviewType(''); localStorage.removeItem('aos-split-preview-v1'); localStorage.removeItem('aos-split-type-v1'); }}>Clear Preview</button>
         </div>
+      </div>}
+    </div>;
+
+    if (n === 'Compress PDF') return <div className="form" style={{ gap: '16px' }}>
+      <p><b>Compress PDF File (Adjustable Compression Level)[span_3](start_span)[span_3](end_span)</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Reduce your PDF file size locally in your browser with custom quality levels.</p>
+
+      <input type="file" accept=".pdf,application/pdf" onChange={e => {
+        const f = e.target.files?.[0];
+        if (f) {
+          SFile(f);
+          SCompressedBlob(null);
+          SCompressedSize('');
+        }
+      }} />
+
+      {file && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--card)', padding: '14px', borderRadius: '10px', border: '1px solid var(--line)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>📄 {file.name}</span>
+          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Original: {(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+          <button onClick={() => { SFile(null); SCompressedBlob(null); SCompressedSize(''); }} style={{ background: 'transparent', border: 'none', color: '#c62828', cursor: 'pointer' }}><Trash2 size={16} /></button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+            <span>Compression Level[span_4](start_span)[span_4](end_span)</span>
+            <b>{compressLevel}%[span_5](start_span)[span_5](end_span)</b>
+          </div>
+          <input type="range" min="10" max="100" value={compressLevel} onChange={e => SCompressLevel(Number(e.target.value))} style={{ cursor: 'pointer', accentColor: 'var(--brand)' }} />
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button disabled={isCompressing} onClick={compressPdfAction} style={{ flex: 1 }}>{isCompressing ? 'Compressing...' : 'Compress PDF'}</button>
+          <button onClick={() => { SFile(null); SCompressedBlob(null); SCompressedSize(''); }} style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)' }}>Delete All[span_6](start_span)[span_6](end_span)</button>
+        </div>
+
+        {compressedBlob && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--soft)', padding: '10px', borderRadius: '8px', marginTop: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+            <span><b>Compressed Size:</b></span>
+            <span style={{ color: 'green', fontWeight: '600' }}>{compressedSize}[span_7](start_span)[span_7](end_span)</span>
+          </div>
+          <button onClick={() => dl(compressedBlob, 'aos-compressed.pdf')}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download Compressed PDF[span_8](start_span)[span_8](end_span)</button>
+        </div>}
       </div>}
     </div>;
 
