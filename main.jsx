@@ -116,7 +116,7 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
@@ -295,7 +295,7 @@ function getTileIcon(cat) {
   if (cat === 'Special Tools') return <Wrench />;
   if (cat === 'Advanced Features') return <Cpu />;
   if (cat === 'Government Portals') return <Globe />;
-  return 'wrench';
+  return <Wrench />;
 }
 
 function App() {
@@ -370,8 +370,12 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Stable History management to prevent site closure on back button
+  // Safe Browser History Routing so back button goes to home instead of closing site
   useEffect(() => {
+    if (active) {
+      window.history.pushState({ page: 'tool', name: active.name }, '');
+    }
+
     const handlePopState = (e) => {
       if (active) {
         ST(null);
@@ -547,9 +551,6 @@ function App() {
     SM('');
     SFile(null);
     SMergeFiles([]);
-    try {
-      window.history.pushState({ page: 'tool', name: tObj.name }, '');
-    } catch {}
   }
 
   function content() {
@@ -938,9 +939,9 @@ function App() {
               </div>
             </div>
             <div className="hero-graphic">
-              <div className="float f1"><FileText />PDF</div>
-              <div className="float f2"><ImageIcon />IMAGE</div>
-              <div className="float f3"><Sparkles />AI</div>
+              <div className="float"><FileText size={18} />PDF</div>
+              <div className="float"><ImageIcon size={18} />IMAGE</div>
+              <div className="float"><Sparkles size={18} />AI</div>
             </div>
           </section>
 
@@ -994,7 +995,6 @@ function App() {
     </div>
 
     <footer>
-      aside className={mobile ? 'open' : ''}
       <span>© {new Date().getFullYear()} {t.footerText}</span>
       <button onClick={() => {
         SD(false);
