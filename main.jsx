@@ -116,9 +116,9 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
-    catalogModules: "మాడ్యూల్స్",
+    catalogModules: "మాడ్యూल्स",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
     freeFirstSetup: "ఉచిత సెటప్",
     exploreTools: "సాధనాలను అన్వేషించండి",
@@ -308,6 +308,7 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
+  // Robust State Persistence for Refresh & Direct URL Open
   const [active, ST] = useState(() => {
     try {
       const savedTool = localStorage.getItem('aos-active-tool-v1');
@@ -370,16 +371,21 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Safe Browser History Routing so back button goes to home instead of closing site
+  // Robust Mobile Back Button Interceptor to prevent website closure
   useEffect(() => {
+    // Push an initial history state when app loads
+    window.history.replaceState({ page: 'home' }, '');
+
     if (active) {
       window.history.pushState({ page: 'tool', name: active.name }, '');
     }
 
     const handlePopState = (e) => {
+      // When mobile back button is pressed, instead of closing site, return to home workspace
       if (active) {
         ST(null);
         localStorage.removeItem('aos-active-tool-v1');
+        window.history.replaceState({ page: 'home' }, '');
       }
     };
 
@@ -551,6 +557,9 @@ function App() {
     SM('');
     SFile(null);
     SMergeFiles([]);
+    try {
+      window.history.pushState({ page: 'tool', name: tObj.name }, '');
+    } catch {}
   }
 
   function content() {
@@ -981,7 +990,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
+          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); window.history.replaceState({ page: 'home' }, ''); }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
             <ArrowLeft size={14} /> All tools
           </button>
           <div className="tool-heading">
