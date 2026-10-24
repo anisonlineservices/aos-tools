@@ -267,7 +267,7 @@ function getTileIcon(cat) {
   if (cat === 'Image Tools') return <ImageIcon />;
   if (cat === 'Special Tools') return <Wrench />;
   if (cat === 'Government Portals') return <Globe />;
-  return 'wrench';
+  return <Wrench />;
 }
 
 function App() {
@@ -404,9 +404,13 @@ function App() {
 
   const shown = useMemo(
     () => items.filter(x => {
-      if (x.cat === 'Government Portals') return false;
       const matchQuery = x.name.toLowerCase().includes(query.toLowerCase());
-      if (cat === 'All Tools') return matchQuery;
+      if (cat === 'All Tools') {
+        return x.cat !== 'Government Portals' && matchQuery;
+      }
+      if (cat === 'Government Portals') {
+        return x.cat === 'Government Portals' && matchQuery;
+      }
       return x.cat === cat && matchQuery;
     }),
     [cat, query]
