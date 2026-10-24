@@ -129,7 +129,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప्यత",
+    privacyMinded: "గోప్యత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -325,7 +325,18 @@ function App() {
 
   const [msg, SM] = useState('');
   const [file, SFile] = useState(null);
+  
+  // Persistent Merge Files Metadata & State
+  const [mergeFilesMeta, SMergeFilesMeta] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aos-merge-meta-v1');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [mergeFiles, SMergeFiles] = useState([]);
+
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
@@ -338,6 +349,13 @@ function App() {
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
   const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
+
+  useEffect(() => {
+    try {
+      const meta = mergeFiles.map(f => ({ name: f.name, size: f.size, type: f.type }));
+      localStorage.setItem('aos-merge-meta-v1', JSON.stringify(meta));
+    } catch {}
+  }, [mergeFiles]);
 
   useEffect(() => {
     try { localStorage.setItem('aos-split-mode-v1', splitMode); } catch {}
@@ -468,7 +486,11 @@ function App() {
   };
 
   const removeMergeFile = (index) => {
-    SMergeFiles(mergeFiles.filter((_, i) => i !== index));
+    const updated = mergeFiles.filter((_, i) => i !== index);
+    SMergeFiles(updated);
+    if (updated.length === 0) {
+      localStorage.removeItem('aos-merge-meta-v1');
+    }
   };
 
   const blobToDataUrl = (blob) => {
@@ -559,7 +581,6 @@ function App() {
     ST(tObj);
     SM('');
     SFile(null);
-    SMergeFiles([]);
     try {
       window.location.hash = tObj.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
     } catch {}
@@ -568,6 +589,9 @@ function App() {
   function goHome() {
     ST(null);
     localStorage.removeItem('aos-active-tool-v1');
+    localStorage.removeItem('aos-merge-meta-v1');
+    SMergeFiles([]);
+    SMergeFilesMeta([]);
     try {
       history.pushState("", document.title, window.location.pathname + window.location.search);
     } catch {}
@@ -587,21 +611,21 @@ function App() {
         }
       }} />
 
-      {mergeFiles.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--line)', padding: '10px', borderRadius: '8px', background: 'var(--card)' }}>
-        <b>Selected PDFs ({mergeFiles.length}):</b>
-        {mergeFiles.map((f, idx) => (
+      {(mergeFiles.length > 0 || mergeFilesMeta.length > 0) && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--line)', padding: '10px', borderRadius: '8px', background: 'var(--card)' }}>
+        <b>Selected PDFs ({mergeFiles.length || mergeFilesMeta.length}):</b>
+        {(mergeFiles.length > 0 ? mergeFiles : mergeFilesMeta).map((f, idx) => (
           <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--soft)', padding: '6px 10px', borderRadius: '6px', fontSize: '12px' }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>{idx + 1}. {f.name}</span>
             <div style={{ display: 'flex', gap: '4px' }}>
               <button disabled={idx === 0} onClick={() => moveMergeFile(idx, 'up')} style={{ padding: '4px 6px', fontSize: '10px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '4px' }}>⬆</button>
-              <button disabled={idx === mergeFiles.length - 1} onClick={() => moveMergeFile(idx, 'down')} style={{ padding: '4px 6px', fontSize: '10px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '4px' }}>⬇</button>
+              <button disabled={idx === (mergeFiles.length || mergeFilesMeta.length) - 1} onClick={() => moveMergeFile(idx, 'down')} style={{ padding: '4px 6px', fontSize: '10px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '4px' }}>⬇</button>
               <button onClick={() => removeMergeFile(idx)} style={{ padding: '4px 6px', fontSize: '10px', background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a', borderRadius: '4px' }}>✕</button>
             </div>
           </div>
         ))}
       </div>}
 
-      <button disabled={mergeFiles.length < 2} onClick={mergePdfAction}>Merge & Download PDF</button>
+      <button disabled={mergeFiles.length < 2 && mergeFilesMeta.length < 2} onClick={mergePdfAction}>Merge & Download PDF</button>
       <small style={{ color: 'var(--muted)', fontSize: '10px' }}>Tip: Select at least 2 PDF files and arrange them in order.</small>
     </div>;
 
