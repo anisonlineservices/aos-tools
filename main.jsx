@@ -116,7 +116,7 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
@@ -295,7 +295,7 @@ function getTileIcon(cat) {
   if (cat === 'Special Tools') return <Wrench />;
   if (cat === 'Advanced Features') return <Cpu />;
   if (cat === 'Government Portals') return <Globe />;
-  return <Wrench />;
+  return 'wrench';
 }
 
 function App() {
@@ -371,18 +371,27 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Bulletproof Mobile Back Button Interceptor
+  // Foolproof Mobile Back Button & Refresh State Interceptor
   useEffect(() => {
-    // Ensure initial home state in history
+    let isInitialMount = true;
+
     try {
-      window.history.replaceState({ page: 'home' }, '');
+      if (!window.history.state) {
+        window.history.replaceState({ page: 'home' }, '');
+      }
       if (active) {
         window.history.pushState({ page: 'tool', name: active.name }, '');
       }
     } catch {}
 
     const handlePopState = (e) => {
-      // Intercept mobile back button to prevent app exit; return to home workspace instead
+      // Ignore initial browser load popstate triggers to prevent false tool resets
+      if (isInitialMount) {
+        isInitialMount = false;
+        return;
+      }
+
+      // When user clicks mobile back button, safely return to home workspace without closing website
       if (active) {
         ST(null);
         localStorage.removeItem('aos-active-tool-v1');
