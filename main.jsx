@@ -116,7 +116,7 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
@@ -335,6 +335,7 @@ function App() {
   const [previewDataUrl, SPreviewDataUrl] = useState(() => localStorage.getItem('aos-split-preview-v1') || '');
   const [previewType, SPreviewType] = useState(() => localStorage.getItem('aos-split-type-v1') || '');
 
+  // PAN Master Hub States (Untouched & Fully Persistent)
   const [panTab, SPanTab] = useState(() => localStorage.getItem('aos-pan-tab-v1') || 'photo');
   const [panPreview, SPanPreview] = useState(() => localStorage.getItem('aos-pan-preview-v1') || '');
   const [panPortal, SPanPortal] = useState(() => localStorage.getItem('aos-pan-portal-v1') || 'NSDL');
@@ -1002,7 +1003,7 @@ function App() {
           </div>
         </> : <main className="workspace">
           <button className="back" onClick={() => goHome()} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
-            <ArrowLeft size={14} /> All tools`
+            <ArrowLeft size={14} /> All tools
           </button>
           <div className="tool-heading">
             <span className={'tile ' + getTileClass(active.cat)}>{getTileIcon(active.cat)}</span>
