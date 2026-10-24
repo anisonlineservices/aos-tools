@@ -1,10 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ArrowLeft } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
 import './style.css';
+
+// Instant Theme Loader to prevent white flash on refresh
+try {
+  const savedApp = JSON.parse(localStorage.getItem('aos-appearance-v1') || '{}');
+  if (savedApp.dark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+  if (savedApp.accent) {
+    document.documentElement.style.setProperty('--brand', savedApp.accent);
+  }
+} catch {}
 
 // Complete Language Dictionary for Instant UI Translation
 const translations = {
@@ -116,7 +129,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప्यత",
+    privacyMinded: "గోప్యత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -306,7 +319,7 @@ function App() {
 
   const [msg, SM] = useState('');
   const [file, SFile] = useState(null);
-  const [mergeFiles, SMergeFiles] = useState([]); // Multiple files for Merge PDF with reorder
+  const [mergeFiles, SMergeFiles] = useState([]);
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
@@ -357,8 +370,9 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
+  // Robust History and Back Button Management to prevent site closing / stuck state
   useEffect(() => {
-    window.history.pushState({ page: 'home' }, '');
+    window.history.replaceState({ page: active ? 'tool' : 'home' }, '');
 
     const handlePopState = (e) => {
       if (active) {
@@ -417,7 +431,6 @@ function App() {
     setTimeout(() => URL.revokeObjectURL(u), 1000);
   };
 
-  // Advance Merge PDF with Reorder Support
   async function mergePdfAction() {
     try {
       if (mergeFiles.length < 2) { SM('Please select at least 2 PDF files to merge.'); return; }
@@ -678,7 +691,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -737,7 +750,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-signature-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Signature resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Signature resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -968,7 +981,9 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); }}>← All tools</button>
+          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); window.history.pushState({ page: 'home' }, ''); }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
+            <ArrowLeft size={14} /> All tools
+          </button>
           <div className="tool-heading">
             <span className={'tile ' + getTileClass(active.cat)}>{getTileIcon(active.cat)}</span>
             <div><small>{active.cat}</small><h1>{active.name}</h1><p>Run this module in your AOS Tools workspace.</p></div>
