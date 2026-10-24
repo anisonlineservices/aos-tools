@@ -116,9 +116,9 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
-    catalogModules: "మాడ్యూल्स",
+    catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
     freeFirstSetup: "ఉచిత సెటప్",
     exploreTools: "సాధనాలను అన్వేషించండి",
@@ -308,7 +308,7 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
-  // Robust State Persistence for Refresh & Direct URL Open
+  // Persistent Active Tool state loaded safely from localStorage
   const [active, ST] = useState(() => {
     try {
       const savedTool = localStorage.getItem('aos-active-tool-v1');
@@ -371,21 +371,24 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Robust Mobile Back Button Interceptor to prevent website closure
+  // Bulletproof Mobile Back Button Interceptor
   useEffect(() => {
-    // Push an initial history state when app loads
-    window.history.replaceState({ page: 'home' }, '');
-
-    if (active) {
-      window.history.pushState({ page: 'tool', name: active.name }, '');
-    }
+    // Ensure initial home state in history
+    try {
+      window.history.replaceState({ page: 'home' }, '');
+      if (active) {
+        window.history.pushState({ page: 'tool', name: active.name }, '');
+      }
+    } catch {}
 
     const handlePopState = (e) => {
-      // When mobile back button is pressed, instead of closing site, return to home workspace
+      // Intercept mobile back button to prevent app exit; return to home workspace instead
       if (active) {
         ST(null);
         localStorage.removeItem('aos-active-tool-v1');
-        window.history.replaceState({ page: 'home' }, '');
+        try {
+          window.history.replaceState({ page: 'home' }, '');
+        } catch {}
       }
     };
 
@@ -858,7 +861,7 @@ function App() {
     <header style={{ gap: '12px' }}>
       <button className="hamb" onClick={() => SMob(!mobile)}>{mobile ? <X /> : <Menu />}</button>
 
-      <button className="brand" onClick={() => { ST(null); SC('All Tools'); localStorage.removeItem('aos-active-tool-v1'); }}>
+      <button className="brand" onClick={() => { ST(null); SC('All Tools'); localStorage.removeItem('aos-active-tool-v1'); try { window.history.replaceState({ page: 'home' }, ''); } catch {} }}>
         <span className="logo">A</span>
         <span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
       </button>
@@ -889,7 +892,7 @@ function App() {
       <aside className={mobile ? 'open' : ''}>
         <div className="label">{t.workspace}</div>
 
-        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); localStorage.removeItem('aos-active-tool-v1'); }}>
+        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); localStorage.removeItem('aos-active-tool-v1'); try { window.history.replaceState({ page: 'home' }, ''); } catch {} }}>
           {getTileIcon(c)}
           <span>{c}</span><ChevronRight />
         </button>)}
@@ -990,7 +993,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); window.history.replaceState({ page: 'home' }, ''); }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
+          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); try { window.history.replaceState({ page: 'home' }, ''); } catch {} }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
             <ArrowLeft size={14} /> All tools
           </button>
           <div className="tool-heading">
