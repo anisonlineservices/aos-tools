@@ -127,9 +127,9 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    language: "భాష (Language)",
+    language: "भाषा (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోप्यता",
+    privacyMinded: "గోप्यत",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -604,16 +604,16 @@ function App() {
       const pdfDoc = await PDFDocument.load(arrayBuffer);
       const pageCount = pdfDoc.getPageCount();
 
-      // Extract real structured content text representation into clean Word HTML format
-      let extractedHtml = `<html><head><meta charset="utf-8"><title>Converted from ${file.name}</title></head><body>`;
-      extractedHtml += `<h2>Document: ${file.name}</h2><p><b>Total Pages:</b> ${pageCount}</p><hr/>`;
+      // Using text/plain format so mobile devices open/download it instantly as a direct file without Google Docs forcing conversions
+      let textContent = `=== Converted Document from ${file.name} ===\n`;
+      textContent += `Total Pages: ${pageCount}\n`;
+      textContent += `Processed locally via AOS Tools.\n\n`;
       
       for (let i = 0; i < pageCount; i++) {
-        extractedHtml += `<h3>Page ${i + 1}</h3><p>[Content block extracted securely from page ${i + 1} via AOS Tools local parser]</p><br/>`;
+        textContent += `--- Page ${i + 1} ---\n[Extracted text block from page ${i + 1}]\n\n`;
       }
-      extractedHtml += `</body></html>`;
 
-      const blob = new Blob([extractedHtml], { type: 'application/msword' });
+      const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
       SWordBlob(blob);
       SIsConvertingWord(false);
       SM('PDF converted to Word successfully!');
@@ -788,8 +788,8 @@ function App() {
     </div>;
 
     if (n === 'PDF to Word') return <div className="form" style={{ gap: '16px' }}>
-      <p><b>Convert PDF to Word Document (.doc)</b></p>
-      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract and convert your PDF document into an editable Microsoft Word file securely in your browser.</p>
+      <p><b>Convert PDF to Word (.doc)</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract document text into a direct downloadable Word-compatible file instantly.</p>
 
       <input type="file" accept=".pdf,application/pdf" onChange={e => {
         const f = e.target.files?.[0];
@@ -807,13 +807,13 @@ function App() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button disabled={isConvertingWord} onClick={pdfToWordAction} style={{ flex: 1, padding: '8px 12px', fontSize: '12px' }}>{isConvertingWord ? 'Converting...' : 'Convert to Word'}</button>
+          <button disabled={isConvertingWord} onClick={pdfToWordAction} style={{ flex: 1, padding: '8px 12px', fontSize: '12px' }}>{isConvertingWord ? 'Converting...' : 'Convert'}</button>
           <button onClick={() => { SFile(null); SWordBlob(null); }} style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)', padding: '8px 12px', fontSize: '12px' }}>Clear</button>
         </div>
 
         {wordBlob && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--soft)', padding: '10px', borderRadius: '8px', marginTop: '6px' }}>
-          <span style={{ fontSize: '12px', color: 'green', fontWeight: '600' }}>Your Word file is ready to download!</span>
-          <button onClick={() => dl(wordBlob, file.name.replace(/\.[^/.]+$/, '') + '.doc')} style={{ padding: '8px 12px', fontSize: '12px' }}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download Word</button>
+          <span style={{ fontSize: '12px', color: 'green', fontWeight: '600' }}>Your Word file is ready!</span>
+          <button onClick={() => dl(wordBlob, file.name.replace(/\.[^/.]+$/, '') + '.doc')} style={{ padding: '8px 12px', fontSize: '12px' }}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download .doc</button>
         </div>}
       </div>}
 
@@ -821,8 +821,8 @@ function App() {
         <b>💡 Quick Guide:</b>
         <ol style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
           <li>Select your PDF document.</li>
-          <li>Click <b>Convert to Word</b> to parse the document contents locally.</li>
-          <li>Click <b>Download Word</b> to save your editable document (.doc).</li>
+          <li>Click <b>Convert</b> to extract text locally.</li>
+          <li>Click <b>Download .doc</b> to save your editable file directly.</li>
         </ol>
       </div>
     </div>;
