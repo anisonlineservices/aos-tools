@@ -153,9 +153,63 @@ const CATALOG = {
   "special": ["Barcode Generator", "Password Generator", "Age Calculator", "Color Picker", "Notepad", "QR Code Generator", "PAN Master Hub", "Ledger Diary", "ZIP Extractor"]
 };
 
+const portals = [
+  ['PAN Apply / UTIITSL', 'https://www.pan.utiitsl.com/'],
+  ['PAN Apply / Protean (NSDL)', 'https://www.protean-tinpan.com/'],
+  ['Income Tax e-Filing', 'https://www.incometax.gov.in/'],
+  ['UIDAI Aadhaar', 'https://uidai.gov.in/'],
+  ['Voter Services', 'https://voters.eci.gov.in/'],
+  ['Passport Seva', 'https://www.passportindia.gov.in/'],
+  ['EPFO', 'https://www.epfindia.gov.in/'],
+  ['Tamil Nadu e-Sevai', 'https://www.tnesevai.tn.gov.in/'],
+  ['Tamil Nadu Ration Card', 'https://www.tnpds.gov.in/'],
+  ['Tamil Nadu RTI', 'https://rtionline.tn.gov.in/'],
+  ['Tamil Nadu Property Tax', 'https://tnurbanepay.tn.gov.in/'],
+  ['Tamil Nadu Electricity (TANGEDCO)', 'https://www.tangedco.org/'],
+  ['Tamil Nadu Birth & Death Registration', 'https://crstn.org/'],
+  ['e-Shram', 'https://eshram.gov.in/'],
+  ['Ayushman Bharat PM-JAY', 'https://pmjay.gov.in/'],
+  ['MSME Udyam Registration', 'https://udyamregistration.gov.in/'],
+  ['FSSAI FoSCoS', 'https://foscos.fssai.gov.in/'],
+  ['NPCI', 'https://www.npci.org.in/'],
+  ['Common Service Centres', 'https://csc.gov.in/'],
+  ['eGazette of India', 'https://egazette.gov.in/'],
+  ['Tamil Nadu Gazette', 'https://www.stationeryprinting.tn.gov.in/'],
+  ['Parivahan', 'https://parivahan.gov.in/'],
+  ['DigiLocker', 'https://www.digilocker.gov.in/'],
+  ['UPSC', 'https://upsc.gov.in/'],
+  ['Railway Recruitment Boards', 'https://www.rrbcdg.gov.in/'],
+  ['IRCTC', 'https://www.irctc.co.in/'],
+  ['National Scholarship Portal', 'https://scholarships.gov.in/'],
+  ['Bihar School Examination Board', 'https://secondary.biharboardonline.com/'],
+  ['Bihar e-PDS', 'https://epds.bihar.gov.in/'],
+  ['National Social Assistance Programme', 'https://nsap.nic.in/'],
+  ['UMANG', 'https://web.umang.gov.in/'],
+  ['Aaple Sarkar Maharashtra', 'https://aaplesarkar.mahaonline.gov.in/'],
+  ['MahaDBT', 'https://mahadbt.maharashtra.gov.in/'],
+  ['Maharashtra Social Justice', 'https://sjsa.maharashtra.gov.in/'],
+  ['Maharashtra Gazette', 'https://egazzete.mahaonline.gov.in/'],
+  ['Chennai Corporation', 'https://chennaicorporation.gov.in/'],
+  ['Tamil Nadu e-Procurement', 'https://tntenders.gov.in/'],
+  ['GST Portal', 'https://www.gst.gov.in/'],
+  ['MCA Services', 'https://www.mca.gov.in/'],
+  ['Bhuvan / ISRO', 'https://bhuvan.nrsc.gov.in/'],
+  ['National Portal of India', 'https://www.india.gov.in/'],
+  ['MyGov India', 'https://www.mygov.in/'],
+  ['National Career Service', 'https://www.ncs.gov.in/'],
+  ['Skill India Digital', 'https://www.skillindiadigital.gov.in/'],
+  ['PM Kisan', 'https://pmkisan.gov.in/'],
+  ['National Health Authority', 'https://nha.gov.in/'],
+  ['GeM Government e-Marketplace', 'https://gem.gov.in/'],
+  ['India Post', 'https://www.indiapost.gov.in/'],
+  ['CBSE', 'https://www.cbse.gov.in/'],
+  ['National Testing Agency', 'https://nta.ac.in/']
+].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
+
 const getToolStatus = (cat, name) => {
   if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF' || name === 'Compress PDF')) return 'ready';
   if (cat === 'Special Tools' && (name === 'PAN Master Hub' || name === 'Ledger Diary' || name === 'ZIP Extractor')) return 'ready';
+  if (cat === 'Government Portals') return 'portal';
   return 'soon';
 };
 
@@ -164,7 +218,8 @@ const makeItems = (arr, cat) => arr.map(name => ({ name, cat, working: getToolSt
 const items = [
   ...makeItems(CATALOG.pdf, 'PDF Tools'),
   ...makeItems(CATALOG.imgs, 'Image Tools'),
-  ...makeItems(CATALOG.special, 'Special Tools')
+  ...makeItems(CATALOG.special, 'Special Tools'),
+  ...portals
 ];
 
 function localDate(d = new Date()) {
@@ -203,6 +258,7 @@ function getTileClass(cat) {
   if (cat === 'PDF Tools') return 'pdf';
   if (cat === 'Image Tools') return 'image';
   if (cat === 'Special Tools') return 'special';
+  if (cat === 'Government Portals') return 'portals';
   return 'wrench';
 }
 
@@ -210,7 +266,8 @@ function getTileIcon(cat) {
   if (cat === 'PDF Tools') return <FileText />;
   if (cat === 'Image Tools') return <ImageIcon />;
   if (cat === 'Special Tools') return <Wrench />;
-  return <Wrench />;
+  if (cat === 'Government Portals') return <Globe />;
+  return 'wrench';
 }
 
 function App() {
@@ -343,10 +400,11 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Special Tools'];
+  const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Special Tools', 'Government Portals'];
 
   const shown = useMemo(
     () => items.filter(x => {
+      if (x.cat === 'Government Portals') return false;
       const matchQuery = x.name.toLowerCase().includes(query.toLowerCase());
       if (cat === 'All Tools') return matchQuery;
       return x.cat === cat && matchQuery;
@@ -907,6 +965,12 @@ function App() {
       </div>}
     </div>;
 
+    if (active.status === 'portal') {
+      window.open(active.url, '_blank', 'noopener,noreferrer');
+      goHome();
+      return null;
+    }
+
     return <div className="form">
       <p>Run module: <strong>{n}</strong>. Select your file or input below.</p>
       <input type="file" onChange={e => SFile(e.target.files?.[0])} />
@@ -989,8 +1053,9 @@ function App() {
 
         <div className="label">{t.personalize}</div>
 
-        <label className="side-field">{t.language}
-          <select value={lang} onChange={e => SL(e.target.value)}>
+        <div className="side-field" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.language}</span>
+          <select value={lang} onChange={e => SL(e.target.value)} style={{ padding: '6px', fontSize: '11px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '6px' }}>
             <option>English</option>
             <option>Hindi</option>
             <option>Hinglish</option>
@@ -998,22 +1063,22 @@ function App() {
             <option>Telugu</option>
             <option>Marathi</option>
           </select>
-        </label>
+        </div>
 
-        <div className="side-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
-          <span>{t.accentColour}</span>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <input type="color" value={accent} onChange={e => SA(e.target.value)} style={{ flex: 1, height: '36px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--line)', borderRadius: '6px' }} />
-            <button style={{ padding: '6px 12px', fontSize: '11px', fontWeight: '600', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '6px', cursor: 'pointer' }} onClick={() => SA('#052f52')}>Default</button>
+        <div className="side-field" style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '10px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.accentColour}</span>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input type="color" value={accent} onChange={e => SA(e.target.value)} style={{ width: '32px', height: '28px', cursor: 'pointer', background: 'transparent', border: '1px solid var(--line)', borderRadius: '4px' }} />
+            <button style={{ padding: '4px 8px', fontSize: '10px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '4px', cursor: 'pointer' }} onClick={() => SA('#052f52')}>Default</button>
           </div>
         </div>
 
-        <div className="privacy" style={{ marginTop: '14px' }}>
-          <LockKeyhole />
-          <span><b>{t.privacyMinded}</b><small>{t.localToolsNote}</small></span>
+        <div className="privacy" style={{ marginTop: '10px', padding: '8px', background: 'var(--card)', borderRadius: '6px', border: '1px solid var(--line)', fontSize: '10px' }}>
+          <LockKeyhole size={12} style={{ display: 'inline', marginRight: '4px' }} />
+          <span><b>{t.privacyMinded}</b> {t.localToolsNote}</span>
         </div>
 
-        <small className="disclaimer">AOS Tools keeps tool workflows on this website.</small>
+        <small className="disclaimer" style={{ fontSize: '9px', marginTop: '6px', display: 'block' }}>AOS Tools keeps tool workflows local.</small>
       </aside>
 
       <main>
