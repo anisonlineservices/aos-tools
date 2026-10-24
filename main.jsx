@@ -308,9 +308,14 @@ function App() {
 
   const t = translations[lang] || translations['English'];
 
-  // Persistent Active Tool state loaded safely from localStorage
+  // Initialize active tool from URL hash if available, otherwise fallback to localStorage
   const [active, ST] = useState(() => {
     try {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (hash) {
+        const found = items.find(i => i.name.toLowerCase().replace(/[^a-z0-9]/g, '-') === hash);
+        if (found) return found;
+      }
       const savedTool = localStorage.getItem('aos-active-tool-v1');
       return savedTool ? JSON.parse(savedTool) : null;
     } catch {
@@ -371,39 +376,25 @@ function App() {
     try { localStorage.setItem('aos-pan-portal-v1', panPortal); } catch {}
   }, [panPortal]);
 
-  // Foolproof Mobile Back Button & Refresh State Interceptor
+  // URL Hash & Mobile Back Button Sync Routing
   useEffect(() => {
-    let isInitialMount = true;
-
-    try {
-      if (!window.history.state) {
-        window.history.replaceState({ page: 'home' }, '');
-      }
-      if (active) {
-        window.history.pushState({ page: 'tool', name: active.name }, '');
-      }
-    } catch {}
-
-    const handlePopState = (e) => {
-      // Ignore initial browser load popstate triggers to prevent false tool resets
-      if (isInitialMount) {
-        isInitialMount = false;
-        return;
-      }
-
-      // When user clicks mobile back button, safely return to home workspace without closing website
-      if (active) {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      if (!hash) {
         ST(null);
         localStorage.removeItem('aos-active-tool-v1');
-        try {
-          window.history.replaceState({ page: 'home' }, '');
-        } catch {}
+      } else {
+        const found = items.find(i => i.name.toLowerCase().replace(/[^a-z0-9]/g, '-') === hash);
+        if (found) {
+          ST(found);
+          localStorage.setItem('aos-active-tool-v1', JSON.stringify(found));
+        }
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [active]);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Video Tools', 'AI Tools', 'Special Tools', 'Advanced Features', 'Government Portals'];
 
@@ -570,7 +561,15 @@ function App() {
     SFile(null);
     SMergeFiles([]);
     try {
-      window.history.pushState({ page: 'tool', name: tObj.name }, '');
+      window.location.hash = tObj.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    } catch {}
+  }
+
+  function goHome() {
+    ST(null);
+    localStorage.removeItem('aos-active-tool-v1');
+    try {
+      history.pushState("", document.title, window.location.pathname + window.location.search);
     } catch {}
   }
 
@@ -870,7 +869,7 @@ function App() {
     <header style={{ gap: '12px' }}>
       <button className="hamb" onClick={() => SMob(!mobile)}>{mobile ? <X /> : <Menu />}</button>
 
-      <button className="brand" onClick={() => { ST(null); SC('All Tools'); localStorage.removeItem('aos-active-tool-v1'); try { window.history.replaceState({ page: 'home' }, ''); } catch {} }}>
+      <button className="brand" onClick={() => goHome()}>
         <span className="logo">A</span>
         <span>AOS <b>TOOLS</b><small>FREE & SECURE</small></span>
       </button>
@@ -901,7 +900,7 @@ function App() {
       <aside className={mobile ? 'open' : ''}>
         <div className="label">{t.workspace}</div>
 
-        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); ST(null); SMob(false); localStorage.removeItem('aos-active-tool-v1'); try { window.history.replaceState({ page: 'home' }, ''); } catch {} }}>
+        {cats.map(c => <button className={'nav ' + (cat === c && !active ? 'sel' : '')} key={c} onClick={() => { SC(c); goHome(); SMob(false); }}>
           {getTileIcon(c)}
           <span>{c}</span><ChevronRight />
         </button>)}
@@ -1002,7 +1001,7 @@ function App() {
             </button>)}
           </div>
         </> : <main className="workspace">
-          <button className="back" onClick={() => { ST(null); localStorage.removeItem('aos-active-tool-v1'); try { window.history.replaceState({ page: 'home' }, ''); } catch {} }} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
+          <button className="back" onClick={() => goHome()} style={{ background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '16px', fontWeight: '600', fontSize: '12px' }}>
             <ArrowLeft size={14} /> All tools
           </button>
           <div className="tool-heading">
