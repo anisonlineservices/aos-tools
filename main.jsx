@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Wrench, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Clock, Eye, ArrowLeft, Trash2, Plus, CheckCircle, Globe, Cpu } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Wrench, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Clock, Eye, ArrowLeft, Trash2, Plus, CheckCircle, Globe, Cpu, ExternalLink } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import JSZip from 'jszip';
 import './style.css';
@@ -21,12 +21,10 @@ try {
 const translations = {
   English: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
-    heroTitle1: "Free tools.",
-    heroTitle2: "One simple workspace.",
-    heroDesc: "PDF, image, and everyday utilities in one place.",
-    catalogModules: "catalog modules",
-    localProcessing: "Local file processing",
-    freeFirstSetup: "Free-first setup",
+    heroTitle1: "Anis Online Services",
+    heroTitle2: "Professional Digital Workspace.",
+    heroDesc: "Fast, secure local utilities and official services in one place.",
+    visitMainSite: "Visit Main Website ↗",
     exploreTools: "Explore tools",
     selectTool: "Select a tool to open it.",
     searchPlaceholder: "Search tools...",
@@ -44,12 +42,10 @@ const translations = {
   },
   Hindi: {
     freeToolkit: "✦ निःशुल्क टूलकिट",
-    heroTitle1: "मुफ्त टूल्स।",
-    heroTitle2: "एक साधारण वर्कस्पेस।",
-    heroDesc: "पीडीएफ, इमेज और रोजमर्रा के टूल्स एक ही जगह पर।",
-    catalogModules: "कैटलॉग मॉड्यूल",
-    localProcessing: "लोकल फाइल प्रोसेसिंग",
-    freeFirstSetup: "फ्री-फर्स्ट सेटअप",
+    heroTitle1: "अनीस ऑनलाइन सर्विसेज",
+    heroTitle2: "प्रोफेशनल डिजिटल वर्कस्पेस।",
+    heroDesc: "तेज़, सुरक्षित लोकल यूटिलिटीज और आधिकारिक सेवाएं एक ही जगह।",
+    visitMainSite: "मुख्य वेबसाइट देखें ↗",
     exploreTools: "टूल्स खोजें",
     selectTool: "खोलने के लिए किसी टूल का चयन करें।",
     searchPlaceholder: "टूल्स खोजें...",
@@ -67,12 +63,10 @@ const translations = {
   },
   Hinglish: {
     freeToolkit: "✦ FREE-FIRST TOOLKIT",
-    heroTitle1: "Free tools.",
-    heroTitle2: "Ek simple workspace.",
-    heroDesc: "PDF, image aur sabhi utilities ek hi jagah par.",
-    catalogModules: "catalog modules",
-    localProcessing: "Local file processing",
-    freeFirstSetup: "Free-first setup",
+    heroTitle1: "Anis Online Services",
+    heroTitle2: "Professional Digital Workspace.",
+    heroDesc: "Fast, secure local utilities aur official services ek hi jagah par.",
+    visitMainSite: "Visit Main Website ↗",
     exploreTools: "Tools explore karein",
     selectTool: "Open karne ke liye tool select karein.",
     searchPlaceholder: "Tools search karein...",
@@ -90,12 +84,10 @@ const translations = {
   },
   Tamil: {
     freeToolkit: "✦ இலவச கருவிகள் தொகுப்பு",
-    heroTitle1: "இலவச கருவிகள்.",
-    heroTitle2: "எளிய பணிமனை.",
-    heroDesc: "PDF, படம் மற்றும் பல சேவைகள் ஒரே இடத்தில்.",
-    catalogModules: "தொகுதிகள்",
-    localProcessing: "உள்ளூர் கோப்பு செயலாக்கம்",
-    freeFirstSetup: "இலவச அமைப்பு",
+    heroTitle1: "Anis Online Services",
+    heroTitle2: "Professional Digital Workspace.",
+    heroDesc: "விரைவான, பாதுகாப்பான கருவிகள் ஒரே இடத்தில்.",
+    visitMainSite: "முகப்பு தளాన్ని பார்வையிடவும் ↗",
     exploreTools: "கருவிகளை ஆராயுங்கள்",
     selectTool: "திறக்க ஒரு கருவியைத் தேர்ந்தெடுக்கவும்.",
     searchPlaceholder: "கருவிகளைத் தேடு...",
@@ -113,12 +105,10 @@ const translations = {
   },
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
-    heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
-    heroDesc: "PDF, ఇమేజ్ మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
-    catalogModules: "మాడ్యూల్స్",
-    localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
-    freeFirstSetup: "ఉచిత సెటప్",
+    heroTitle1: "Anis Online Services",
+    heroTitle2: "Professional Digital Workspace.",
+    heroDesc: "వేగवानమైన, సురక్షితమైన సాధనాలు ఒకే చోట.",
+    visitMainSite: "ప్రధాన వెబ్‌సైట్‌ను సందర్శించండి ↗",
     exploreTools: "సాధనాలను అన్వేషించండి",
     selectTool: "తెరవడానికి ఒక సాధనాన్ని ఎంచుకోండి.",
     searchPlaceholder: "సాధనాలను వెతకండి...",
@@ -136,12 +126,10 @@ const translations = {
   },
   Marathi: {
     freeToolkit: "✦ मोफत साधनकिट",
-    heroTitle1: "मोफत टूल्स.",
-    heroTitle2: "एक साधे workspace.",
-    heroDesc: "PDF, इमेज आणि इतर टूल्स एकाच ठिकाणी.",
-    catalogModules: "मॉड्यूल्स",
-    localProcessing: "लोकल फाईल प्रक्रिया",
-    freeFirstSetup: "मोफत सेटअप",
+    heroTitle1: "Anis Online Services",
+    heroTitle2: "Professional Digital Workspace.",
+    heroDesc: "जलद, सुरक्षित साधने एकाच ठिकाणी.",
+    visitMainSite: "मुख्य वेबसाइटला भेट द्या ↗",
     exploreTools: "टूल्स तपासा",
     selectTool: "उघडण्यासाठी टूल निवडा.",
     searchPlaceholder: "टूल्स शोधा...",
@@ -165,73 +153,18 @@ const CATALOG = {
   "special": ["Barcode Generator", "Password Generator", "Age Calculator", "Color Picker", "Notepad", "QR Code Generator", "PAN Master Hub", "Ledger Diary", "ZIP Extractor"]
 };
 
-const portals = [
-  ['PAN Apply / UTIITSL', 'https://www.pan.utiitsl.com/'],
-  ['PAN Apply / Protean (NSDL)', 'https://www.protean-tinpan.com/'],
-  ['Income Tax e-Filing', 'https://www.incometax.gov.in/'],
-  ['UIDAI Aadhaar', 'https://uidai.gov.in/'],
-  ['Voter Services', 'https://voters.eci.gov.in/'],
-  ['Passport Seva', 'https://www.passportindia.gov.in/'],
-  ['EPFO', 'https://www.epfindia.gov.in/'],
-  ['Tamil Nadu e-Sevai', 'https://www.tnesevai.tn.gov.in/'],
-  ['Tamil Nadu Ration Card', 'https://www.tnpds.gov.in/'],
-  ['Tamil Nadu RTI', 'https://rtionline.tn.gov.in/'],
-  ['Tamil Nadu Property Tax', 'https://tnurbanepay.tn.gov.in/'],
-  ['Tamil Nadu Electricity (TANGEDCO)', 'https://www.tangedco.org/'],
-  ['Tamil Nadu Birth & Death Registration', 'https://crstn.org/'],
-  ['e-Shram', 'https://eshram.gov.in/'],
-  ['Ayushman Bharat PM-JAY', 'https://pmjay.gov.in/'],
-  ['MSME Udyam Registration', 'https://udyamregistration.gov.in/'],
-  ['FSSAI FoSCoS', 'https://foscos.fssai.gov.in/'],
-  ['NPCI', 'https://www.npci.org.in/'],
-  ['Common Service Centres', 'https://csc.gov.in/'],
-  ['eGazette of India', 'https://egazette.gov.in/'],
-  ['Tamil Nadu Gazette', 'https://www.stationeryprinting.tn.gov.in/'],
-  ['Parivahan', 'https://parivahan.gov.in/'],
-  ['DigiLocker', 'https://www.digilocker.gov.in/'],
-  ['UPSC', 'https://upsc.gov.in/'],
-  ['Railway Recruitment Boards', 'https://www.rrbcdg.gov.in/'],
-  ['IRCTC', 'https://www.irctc.co.in/'],
-  ['National Scholarship Portal', 'https://scholarships.gov.in/'],
-  ['Bihar School Examination Board', 'https://secondary.biharboardonline.com/'],
-  ['Bihar e-PDS', 'https://epds.bihar.gov.in/'],
-  ['National Social Assistance Programme', 'https://nsap.nic.in/'],
-  ['UMANG', 'https://web.umang.gov.in/'],
-  ['Aaple Sarkar Maharashtra', 'https://aaplesarkar.mahaonline.gov.in/'],
-  ['MahaDBT', 'https://mahadbt.maharashtra.gov.in/'],
-  ['Maharashtra Social Justice', 'https://sjsa.maharashtra.gov.in/'],
-  ['Maharashtra Gazette', 'https://egazzete.mahaonline.gov.in/'],
-  ['Chennai Corporation', 'https://chennaicorporation.gov.in/'],
-  ['Tamil Nadu e-Procurement', 'https://tntenders.gov.in/'],
-  ['GST Portal', 'https://www.gst.gov.in/'],
-  ['MCA Services', 'https://www.mca.gov.in/'],
-  ['Bhuvan / ISRO', 'https://bhuvan.nrsc.gov.in/'],
-  ['National Portal of India', 'https://www.india.gov.in/'],
-  ['MyGov India', 'https://www.mygov.in/'],
-  ['National Career Service', 'https://www.ncs.gov.in/'],
-  ['Skill India Digital', 'https://www.skillindiadigital.gov.in/'],
-  ['PM Kisan', 'https://pmkisan.gov.in/'],
-  ['National Health Authority', 'https://nha.gov.in/'],
-  ['GeM Government e-Marketplace', 'https://gem.gov.in/'],
-  ['India Post', 'https://www.indiapost.gov.in/'],
-  ['CBSE', 'https://www.cbse.gov.in/'],
-  ['National Testing Agency', 'https://nta.ac.in/']
-].map(([name, url]) => ({ name, cat: 'Government Portals', url, working: true, status: 'portal' }));
-
-function getToolStatus(cat, name) {
+const getToolStatus = (cat, name) => {
   if (cat === 'PDF Tools' && (name === 'Merge PDF' || name === 'Split PDF' || name === 'Compress PDF')) return 'ready';
   if (cat === 'Special Tools' && (name === 'PAN Master Hub' || name === 'Ledger Diary' || name === 'ZIP Extractor')) return 'ready';
-  if (cat === 'Government Portals') return 'portal';
   return 'soon';
-}
+};
 
 const makeItems = (arr, cat) => arr.map(name => ({ name, cat, working: getToolStatus(cat, name) === 'ready', status: getToolStatus(cat, name) }));
 
 const items = [
   ...makeItems(CATALOG.pdf, 'PDF Tools'),
   ...makeItems(CATALOG.imgs, 'Image Tools'),
-  ...makeItems(CATALOG.special, 'Special Tools'),
-  ...portals
+  ...makeItems(CATALOG.special, 'Special Tools')
 ];
 
 function localDate(d = new Date()) {
@@ -270,7 +203,6 @@ function getTileClass(cat) {
   if (cat === 'PDF Tools') return 'pdf';
   if (cat === 'Image Tools') return 'image';
   if (cat === 'Special Tools') return 'special';
-  if (cat === 'Government Portals') return 'portals';
   return 'wrench';
 }
 
@@ -278,7 +210,6 @@ function getTileIcon(cat) {
   if (cat === 'PDF Tools') return <FileText />;
   if (cat === 'Image Tools') return <ImageIcon />;
   if (cat === 'Special Tools') return <Wrench />;
-  if (cat === 'Government Portals') return <Globe />;
   return <Wrench />;
 }
 
@@ -412,7 +343,7 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Special Tools', 'Government Portals'];
+  const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Special Tools'];
 
   const shown = useMemo(
     () => items.filter(x => {
@@ -965,15 +896,13 @@ function App() {
         }}>Compress PDF & Download (&lt;300KB)</button>
       </div>}
 
-      {panTab === 'portals' && <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--line)', padding: '16px', borderRadius: '12px', background: 'var(--card)' }}>
-        <b>🔗 Direct Official Portals & Services</b>
-        <div className="portal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
-          <a href="https://onlineservices.proteantech.in/paam/endUserRegisterContact.html" target="_blank" rel="noreferrer">Online PAN Application ↗</a>
-          <a href="https://onlineservices.proteantech.in/paam/ReprintEPan.html" target="_blank" rel="noreferrer">Request Reprint of PAN ↗</a>
-          <a href="https://onlineservices.proteantech.in/paam/requestAndDownloadEPAN.html" target="_blank" rel="noreferrer">Download e-PAN / XML ↗</a>
-          <a href="https://tin.tin.proteantech.in/pantan/StatusTrack.html" target="_blank" rel="noreferrer">Track PAN Status ↗</a>
-          <a href="https://www.pan.utiitsl.com/PAN/newA.html" target="_blank" rel="noreferrer">UTIITSL Portal ↗</a>
-          <a href="https://www.incometax.gov.in/iec/foportal/" target="_blank" rel="noreferrer">Income Tax Department ↗</a>
+      {panTab === 'portals' && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--line)', padding: '12px', borderRadius: '10px', background: 'var(--card)' }}>
+        <b style={{ fontSize: '11px' }}>Official Portals</b>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+          <a href="https://onlineservices.proteantech.in/paam/endUserRegisterContact.html" target="_blank" rel="noreferrer" style={{ fontSize: '10px' }}>PAN Application ↗</a>
+          <a href="https://onlineservices.proteantech.in/paam/ReprintEPan.html" target="_blank" rel="noreferrer" style={{ fontSize: '10px' }}>Reprint PAN ↗</a>
+          <a href="https://onlineservices.proteantech.in/paam/requestAndDownloadEPAN.html" target="_blank" rel="noreferrer" style={{ fontSize: '10px' }}>Download e-PAN ↗</a>
+          <a href="https://www.pan.utiitsl.com/PAN/newA.html" target="_blank" rel="noreferrer" style={{ fontSize: '10px' }}>UTIITSL Portal ↗</a>
         </div>
       </div>}
     </div>;
@@ -1089,21 +1018,14 @@ function App() {
 
       <main>
         {!active ? <>
-          <section className="hero">
+          <section className="hero" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="eyebrow">{t.freeToolkit}</div>
+            <h1 style={{ fontSize: '24px', lineHeight: '1.2' }}>{t.heroTitle1}<br /><span style={{ color: 'var(--brand)' }}>{t.heroTitle2}</span></h1>
+            <p style={{ fontSize: '13px', color: 'var(--muted)' }}>{t.heroDesc}</p>
             <div>
-              <div className="eyebrow">{t.freeToolkit}</div>
-              <h1>{t.heroTitle1}<br /><span>{t.heroTitle2}</span></h1>
-              <p>{t.heroDesc}</p>
-              <div className="stats">
-                <span><b>{items.length}+</b> {t.catalogModules}</span>
-                <span><b>Local</b> {t.localProcessing}</span>
-                <span><b>Free-first</b> {t.freeFirstSetup}</span>
-              </div>
-            </div>
-            <div className="hero-graphic">
-              <div className="float"><FileText size={18} />PDF</div>
-              <div className="float"><ImageIcon size={18} />IMAGE</div>
-              <div className="float"><Wrench size={18} />TOOLS</div>
+              <a href="https://anisonlineservices.my.canva.site/" target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--brand)', color: '#fff', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
+                {t.visitMainSite} <ExternalLink size={14} />
+              </a>
             </div>
           </section>
 
@@ -1116,19 +1038,14 @@ function App() {
           </div>
 
           <div className="grid">
-            {shown.map(tItem => <button key={tItem.cat + tItem.name} className="card" onClick={() => tItem.url ? window.open(tItem.url, '_blank', 'noopener,noreferrer') : tool(tItem)}>
+            {shown.map(tItem => <button key={tItem.cat + tItem.name} className="card" onClick={() => tool(tItem)}>
               <span className={'tile ' + getTileClass(tItem.cat)}>
                 {getTileIcon(tItem.cat)}
               </span>
               <b>{tItem.name}</b>
-              <p>{tItem.url ? 'Official portal · opens in a new tab' : (tItem.status === 'ready' ? t.readyInWorkspace : t.comingSoonText)}</p>
+              <p>{tItem.status === 'ready' ? t.readyInWorkspace : t.comingSoonText}</p>
               <span className="card-foot">
-                {tItem.status === 'portal' ? (
-                  <>
-                    <em className="ready">Portal link</em>
-                    <ChevronRight size={15} />
-                  </>
-                ) : tItem.status === 'ready' ? (
+                {tItem.status === 'ready' ? (
                   <>
                     <em className="ready">Ready</em>
                     <ChevronRight size={15} />
