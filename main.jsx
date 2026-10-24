@@ -116,7 +116,7 @@ const translations = {
   Telugu: {
     freeToolkit: "✦ ఉచిత టూల్‌కిట్",
     heroTitle1: "ఉచిత సాధనాలు.",
-    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేస్.",
+    heroTitle2: "ఒక సాధారణ వర్క్‌స్పేस.",
     heroDesc: "PDF, ఇమేజ్, వీడియో, AI మరియు ఇతర యుటిలిటీలు ఒకే చోట.",
     catalogModules: "మాడ్యూల్స్",
     localProcessing: "స్థానిక ఫైల్ ప్రాసెసింగ్",
@@ -372,13 +372,16 @@ function App() {
 
   // Robust History and Back Button Management to prevent site closing / stuck state
   useEffect(() => {
-    window.history.replaceState({ page: active ? 'tool' : 'home' }, '');
+    if (active) {
+      window.history.pushState({ page: 'tool', name: active.name }, '');
+    } else {
+      window.history.replaceState({ page: 'home' }, '');
+    }
 
     const handlePopState = (e) => {
       if (active) {
         ST(null);
         localStorage.removeItem('aos-active-tool-v1');
-        window.history.pushState({ page: 'home' }, '');
       }
     };
 
@@ -691,7 +694,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-photo-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Passport Photo resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Passport Photo resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
@@ -750,7 +753,7 @@ function App() {
                 const checkSize = (currentBlob) => {
                   if (currentBlob.size / 1024 <= maxKb || q <= 0.2) {
                     dl(currentBlob, `aos-pan-signature-${panPortal.toLowerCase()}.jpg`);
-                    SM(`Signature resized successfully! Dimensions: ${w}x{h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
+                    SM(`Signature resized successfully! Dimensions: ${w}x${h}px, Size: ${Math.round(currentBlob.size / 1024)} KB.`);
                   } else {
                     q -= 0.1;
                     c.toBlob(nextBlob => checkSize(nextBlob), 'image/jpeg', q);
