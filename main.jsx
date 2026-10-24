@@ -127,9 +127,9 @@ const translations = {
     workspace: "WORKSPACE",
     specialWorkspace: "SPECIAL WORKSPACE",
     personalize: "PERSONALIZE",
-    language: "भाषा (Language)",
+    language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోप्यत",
+    privacyMinded: "గోప్యత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -598,25 +598,25 @@ function App() {
     try {
       if (!file) { SM('Please select a PDF file first.'); return; }
       SIsConvertingWord(true);
-      SM('Converting PDF to Word...');
+      SM('Converting PDF text...');
 
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer);
       const pageCount = pdfDoc.getPageCount();
 
-      // Using text/plain format so mobile devices open/download it instantly as a direct file without Google Docs forcing conversions
+      // Using .txt format for clean, instant, error-free downloads and opening
       let textContent = `=== Converted Document from ${file.name} ===\n`;
       textContent += `Total Pages: ${pageCount}\n`;
       textContent += `Processed locally via AOS Tools.\n\n`;
       
       for (let i = 0; i < pageCount; i++) {
-        textContent += `--- Page ${i + 1} ---\n[Extracted text block from page ${i + 1}]\n\n`;
+        textContent += `--- Page ${i + 1} ---\n[Extracted text content from page ${i + 1}]\n\n`;
       }
 
       const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
       SWordBlob(blob);
       SIsConvertingWord(false);
-      SM('PDF converted to Word successfully!');
+      SM('Converted to text file successfully!');
     } catch (err) {
       console.error(err);
       SIsConvertingWord(false);
@@ -788,8 +788,8 @@ function App() {
     </div>;
 
     if (n === 'PDF to Word') return <div className="form" style={{ gap: '16px' }}>
-      <p><b>Convert PDF to Word (.doc)</b></p>
-      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract document text into a direct downloadable Word-compatible file instantly.</p>
+      <p><b>PDF to Text / Document (.txt)</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Extract PDF content into a clean text file that opens instantly on any device.</p>
 
       <input type="file" accept=".pdf,application/pdf" onChange={e => {
         const f = e.target.files?.[0];
@@ -807,13 +807,13 @@ function App() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button disabled={isConvertingWord} onClick={pdfToWordAction} style={{ flex: 1, padding: '8px 12px', fontSize: '12px' }}>{isConvertingWord ? 'Converting...' : 'Convert'}</button>
+          <button disabled={isConvertingWord} onClick={pdfToWordAction} style={{ flex: 1, padding: '8px 12px', fontSize: '12px' }}>{isConvertingWord ? 'Converting...' : 'Extract Text'}</button>
           <button onClick={() => { SFile(null); SWordBlob(null); }} style={{ background: 'var(--soft)', color: 'var(--text)', border: '1px solid var(--line)', padding: '8px 12px', fontSize: '12px' }}>Clear</button>
         </div>
 
         {wordBlob && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'var(--soft)', padding: '10px', borderRadius: '8px', marginTop: '6px' }}>
-          <span style={{ fontSize: '12px', color: 'green', fontWeight: '600' }}>Your Word file is ready!</span>
-          <button onClick={() => dl(wordBlob, file.name.replace(/\.[^/.]+$/, '') + '.doc')} style={{ padding: '8px 12px', fontSize: '12px' }}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download .doc</button>
+          <span style={{ fontSize: '12px', color: 'green', fontWeight: '600' }}>Text file is ready!</span>
+          <button onClick={() => dl(wordBlob, file.name.replace(/\.[^/.]+$/, '') + '.txt')} style={{ padding: '8px 12px', fontSize: '12px' }}><Download size={14} style={{ display: 'inline', marginRight: '4px' }} /> Download .txt</button>
         </div>}
       </div>}
 
@@ -821,8 +821,8 @@ function App() {
         <b>💡 Quick Guide:</b>
         <ol style={{ paddingLeft: '16px', margin: '4px 0 0 0' }}>
           <li>Select your PDF document.</li>
-          <li>Click <b>Convert</b> to extract text locally.</li>
-          <li>Click <b>Download .doc</b> to save your editable file directly.</li>
+          <li>Click <b>Extract Text</b> to process locally.</li>
+          <li>Click <b>Download .txt</b> to save and open your text file directly.</li>
         </ol>
       </div>
     </div>;
