@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye } from 'lucide-react';
+import { Search, Sun, Moon, FileText, Image as ImageIcon, Video, Sparkles, Wrench, ShieldCheck, ChevronRight, Menu, X, LockKeyhole, Download, RotateCcw, Sliders, Scissors, CheckCircle, Globe, Cpu, Clock, Eye, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import QRCode from 'qrcode';
 import JSZip from 'jszip';
@@ -116,7 +116,7 @@ const translations = {
     personalize: "PERSONALIZE",
     language: "భాష (Language)",
     accentColour: "రంగు",
-    privacyMinded: "గోప్యత",
+    privacyMinded: "గోప्यత",
     localToolsNote: "స్థానికంగా ప్రాసెస్ చేయబడుతుంది.",
     footerText: "AOS టూల్्स",
     resetAppearance: "రీసెట్ చేయండి",
@@ -306,7 +306,7 @@ function App() {
 
   const [msg, SM] = useState('');
   const [file, SFile] = useState(null);
-  const [files, SFiles] = useState([]);
+  const [mergeFiles, SMergeFiles] = useState([]); // Multiple files for Merge PDF with reorder
   const [user, SU] = useState(() => loadGoogleProfile());
   const [mobile, SMob] = useState(false);
 
@@ -372,8 +372,6 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [active]);
 
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
   const cats = ['All Tools', 'PDF Tools', 'Image Tools', 'Video Tools', 'AI Tools', 'Special Tools', 'Advanced Features', 'Government Portals'];
 
   const shown = useMemo(
@@ -419,20 +417,36 @@ function App() {
     setTimeout(() => URL.revokeObjectURL(u), 1000);
   };
 
-  async function merge() {
+  // Advance Merge PDF with Reorder Support
+  async function mergePdfAction() {
     try {
-      if (files.length < 2) { SM('Select at least two PDF files.'); return; }
+      if (mergeFiles.length < 2) { SM('Please select at least 2 PDF files to merge.'); return; }
       const out = await PDFDocument.create();
-      for (const f of files) {
+      for (const f of mergeFiles) {
         const p = await PDFDocument.load(await f.arrayBuffer());
         (await out.copyPages(p, p.getPageIndices())).forEach(pg => out.addPage(pg));
       }
       dl(new Blob([await out.save()], { type: 'application/pdf' }), 'aos-merged.pdf');
-      SM(`Merged ${files.length} PDFs locally.`);
-    } catch {
-      SM('Merge failed. Check that PDFs are valid and not encrypted.');
+      SM(`Successfully merged ${mergeFiles.length} PDFs in your custom order!`);
+    } catch (err) {
+      console.error(err);
+      SM('Merge failed. Check that all PDFs are valid and not encrypted.');
     }
   }
+
+  const moveMergeFile = (index, direction) => {
+    const newFiles = [...mergeFiles];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newFiles.length) return;
+    const temp = newFiles[index];
+    newFiles[index] = newFiles[targetIndex];
+    newFiles[targetIndex] = temp;
+    SMergeFiles(newFiles);
+  };
+
+  const removeMergeFile = (index) => {
+    SMergeFiles(mergeFiles.filter((_, i) => i !== index));
+  };
 
   const blobToDataUrl = (blob) => {
     return new Promise((resolve) => {
@@ -522,7 +536,7 @@ function App() {
     ST(tObj);
     SM('');
     SFile(null);
-    SFiles([]);
+    SMergeFiles([]);
     window.history.pushState({ page: 'tool', name: tObj.name }, '');
   }
 
@@ -530,10 +544,32 @@ function App() {
     if (!active) return null;
     const n = active.name;
 
-    if (n === 'Merge PDF') return <div className="form">
-      <p>Select two or more PDFs; they are merged in this browser.</p>
-      <input type="file" accept=".pdf,application/pdf" multiple onChange={e => SFiles([...e.target.files])} />
-      <button disabled={files.length < 2} onClick={merge}>Merge and download</button>
+    if (n === 'Merge PDF') return <div className="form" style={{ gap: '14px' }}>
+      <p><b>Merge Multiple PDFs (With Custom Reordering)</b></p>
+      <p style={{ fontSize: '11px', color: 'var(--muted)' }}>Select multiple PDFs below. Use the up/down arrows to arrange them in your desired sequence before merging.</p>
+      
+      <input type="file" accept=".pdf,application/pdf" multiple onChange={e => {
+        if (e.target.files) {
+          SMergeFiles(prev => [...prev, ...Array.from(e.target.files)]);
+        }
+      }} />
+
+      {mergeFiles.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto', border: '1px solid var(--line)', padding: '10px', borderRadius: '8px', background: 'var(--card)' }}>
+        <b>Selected PDFs ({mergeFiles.length}):</b>
+        {mergeFiles.map((f, idx) => (
+          <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--soft)', padding: '6px 10px', borderRadius: '6px', fontSize: '12px' }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>{idx + 1}. {f.name}</span>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button disabled={idx === 0} onClick={() => moveMergeFile(idx, 'up')} style={{ padding: '4px 6px', fontSize: '10px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '4px' }}>⬆</button>
+              <button disabled={idx === mergeFiles.length - 1} onClick={() => moveMergeFile(idx, 'down')} style={{ padding: '4px 6px', fontSize: '10px', background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--line)', borderRadius: '4px' }}>⬇</button>
+              <button onClick={() => removeMergeFile(idx)} style={{ padding: '4px 6px', fontSize: '10px', background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a', borderRadius: '4px' }}>✕</button>
+            </div>
+          </div>
+        ))}
+      </div>}
+
+      <button disabled={mergeFiles.length < 2} onClick={mergePdfAction}>Merge & Download PDF</button>
+      <small style={{ color: 'var(--muted)', fontSize: '10px' }}>Tip: Select at least 2 PDF files and arrange them in order.</small>
     </div>;
 
     if (n === 'Split PDF') return <div className="form" style={{ gap: '14px' }}>
