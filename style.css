@@ -17,7 +17,6 @@
   --soft: #1f2937;
 }
 
-/* Prevent white flash on load/refresh by setting default background */
 html, body {
   background-color: var(--bg);
   color: var(--text);
@@ -125,6 +124,36 @@ header {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+/* Fixed Profile Layout to prevent giant image bug */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--soft);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.profile img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
 }
 
 .layout {
